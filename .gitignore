@@ -1,0 +1,27 @@
+# User data (SENSITIVE - NEVER PUSH)
+users.json
+data/
+*.log
+events.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.Python
+venv/
+env/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

@@ -5,7 +5,8 @@ Public marketing site (landing, signup, login) + a private per-user
 dashboard. Auth lives in auth.py; this file just wires routes,
 sessions, and per-user file paths together.
 """
-
+from dotenv import load_dotenv
+load_dotenv()
 import json
 import os
 from datetime import datetime
@@ -22,8 +23,7 @@ APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
 
 app = Flask(__name__)
-app.secret_key = "dev-secret-key-change-in-production"  # replace before real deployment
-
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key-change-in-production")
 
 # ============================================================================
 # HELPERS
@@ -236,11 +236,12 @@ def register():
         database[name] = {
             "image": os.path.relpath(save_path, APP_ROOT),
             "registered": str(datetime.now()),
-            "last_detected": None,
+            "last_detected": "Never",
+            "last_fed": "Never",
         }
         save_database(paths["database"], database)
 
-        flash(f"✓ Registered '{name}' successfully!")
+        flash(f"✓ Registered '{name}' successfully! Ready to detect.")
         return redirect(url_for("home"))
 
     return render_template("register.html")
@@ -265,6 +266,17 @@ def detect():
                 database_path=paths["database"],
                 log_path=os.path.join(paths["dir"], "events.log"),
             )
+            
+            # Update pet's last_detected and last_fed timestamps
+            if result.get("pet") != "Unknown":
+                pet_name = result.get("pet")
+                database = load_database(paths["database"])
+                if pet_name in database:
+                    database[pet_name]["last_detected"] = datetime.now().strftime("%I:%M %p")
+                    if result.get("action") == "allow_feeding":
+                        database[pet_name]["last_fed"] = datetime.now().strftime("%I:%M %p")
+                    save_database(paths["database"], database)
+            
             return render_template("detect.html", result=result)
         except Exception as e:
             flash(f"Error: {str(e)}", "error")
