@@ -1,0 +1,91 @@
+{% extends "dashboard_base.html" %}
+{% block dashboard_content %}
+
+<div class="grid cols-3">
+  <div class="stat-card">
+    <div class="label">Total Events</div>
+    <div class="value">{{ total_events }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Successful Feedings</div>
+    <div class="value" style="color: var(--success);">{{ total_feedings }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Skipped/Denied</div>
+    <div class="value" style="color: var(--warning);">{{ total_events - total_feedings }}</div>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2>📊 Feedings by Pet</h2>
+    {% if events_by_pet %}
+      <table>
+        <thead>
+          <tr>
+            <th>Pet Name</th>
+            <th>Total Detections</th>
+            <th>Successful Feedings</th>
+            <th>Success Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pet, events in events_by_pet.items()|sort %}
+            <tr>
+              <td style="font-weight: 600;">{{ pet }}</td>
+              <td style="text-align: center;">{{ events | length }}</td>
+              <td style="text-align: center; font-weight: 600;">
+                <span class="badge success">
+                  {{ events | selectattr('is_fed') | list | length }}
+                </span>
+              </td>
+              <td style="text-align: center;">
+                {% set success = events | selectattr('is_fed') | list | length %}
+                {% set total = events | length %}
+                {{ (success * 100 / total) | round(0) | int }}%
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-state">
+        <p>No detection events yet. Run some tests on the Detection page.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>📋 Recent Activity</h2>
+    {% set recent_events = [] %}
+    {% for pet, events in events_by_pet.items() %}
+      {% for event in events %}
+        {% set _ = recent_events.append((pet, event)) %}
+      {% endfor %}
+    {% endfor %}
+    
+    {% if recent_events %}
+      <div style="max-height: 400px; overflow-y: auto;">
+        {% for pet, event in recent_events[-10:] | reverse %}
+          <div style="padding: 0.75rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <p style="margin: 0; font-weight: 600;">{{ pet }}</p>
+              <p style="margin: 0; font-size: 0.85rem; color: var(--text-light);">{{ event.time }}</p>
+            </div>
+            {% if event.is_fed %}
+              <span class="badge success">✓ Fed</span>
+            {% else %}
+              <span class="badge warning">⊘ Skipped</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>No activity yet</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

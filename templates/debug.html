@@ -1,0 +1,114 @@
+{% extends "dashboard_base.html" %}
+{% block dashboard_content %}
+
+<div class="card">
+  <h1>🔬 Debug Similarity Matching</h1>
+  <p class="text-muted">Upload an image to see how similar it is to each registered pet</p>
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2>Upload & Test</h2>
+    <form method="post" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="frame">Select Image *</label>
+        <input type="file" name="frame" id="frame" accept="image/png, image/jpeg" required>
+        <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 0.5rem;">
+          🎯 Use a photo of one of your registered pets to see the matching scores
+        </p>
+      </div>
+      <button type="submit" class="success" style="width: 100%; padding: 0.9rem;">
+        Calculate Scores
+      </button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>💡 How It Works</h2>
+    <ul style="line-height: 1.8; color: var(--text-light); padding-left: 1.5rem;">
+      <li><strong>Upload:</strong> Select any pet photo</li>
+      <li><strong>Embedding:</strong> Converts photo to 384-d vector</li>
+      <li><strong>Comparison:</strong> Compares against all registered pets</li>
+      <li><strong>Threshold:</strong> Scores above {{ threshold }} = match</li>
+      <li><strong>Result:</strong> Shows all similarity scores</li>
+    </ul>
+  </div>
+</div>
+
+{% if scores %}
+  <div class="card">
+    <h1>Similarity Scores</h1>
+    <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+      <strong>Threshold:</strong> {{ threshold }} — scores below this are marked as "Unknown"
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Pet Name</th>
+          <th>Similarity Score</th>
+          <th>Match Status</th>
+          <th>Visual Indicator</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set sorted_scores = scores.items()|sort(attribute='1', reverse=true) %}
+        {% for name, score in sorted_scores %}
+          {% if score is number %}
+            <tr>
+              <td><strong>{{ name }}</strong></td>
+              <td style="font-family: monospace; font-weight: 600; font-size: 1.1rem;">
+                {{ score }}
+              </td>
+              <td>
+                {% if score >= threshold %}
+                  <span class="badge success">✓ MATCH</span>
+                {% else %}
+                  <span class="badge danger">✗ NO MATCH</span>
+                {% endif %}
+              </td>
+              <td>
+                <div style="background: linear-gradient(90deg, 
+                  {% if score >= threshold %}#51cf66{% else %}#ff6b6b{% endif %} 0%,
+                  {% if score >= threshold %}#51cf66{% else %}#ff6b6b{% endif %} {{ (score / 1.0 * 100)|int }}%, 
+                  #e9ecef {{ (score / 1.0 * 100)|int }}%, 
+                  #e9ecef 100%); 
+                  height: 8px; border-radius: 4px; min-width: 100px;">
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr style="background: #fff3bf;">
+              <td><strong>{{ name }}</strong></td>
+              <td colspan="3" style="color: #5c3d0f;">
+                ⚠️ {{ score }}
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div style="margin-top: 2rem; padding: 1.5rem; background: #d0ebff; border-radius: 8px; border-left: 4px solid #2c5aa0;">
+      <p style="color: #0c3578; margin: 0;">
+        <strong>ℹ️ Analysis:</strong>
+        {% set best_score = sorted_scores[0][1] if sorted_scores and sorted_scores[0][1] is number else 0 %}
+        {% if best_score >= threshold %}
+          The image most closely matches <strong>{{ sorted_scores[0][0] }}</strong> with a score of {{ best_score }}
+        {% else %}
+          The best match is {{ best_score }}, which is below the threshold of {{ threshold }}, so it would be marked as <strong>Unknown</strong>
+        {% endif %}
+      </p>
+    </div>
+
+    <div style="margin-top: 1.5rem;">
+      <form method="post" enctype="multipart/form-data">
+        <button type="submit" class="secondary" style="width: 100%;">
+          ↻ Test Another Image
+        </button>
+      </form>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "dashboard_base.html" %}
+{% block dashboard_content %}
+
+<div class="grid cols-4">
+  <div class="stat-card">
+    <div class="label">Registered Pets</div>
+    <div class="value">{{ pet_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Detections Today</div>
+    <div class="value">{{ detections_today }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Feedings Today</div>
+    <div class="value">{{ feedings_today }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Pending Alerts</div>
+    <div class="value" style="color: var(--warning);">{{ pending_alerts }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h1>Registered Pets</h1>
+    <a href="{{ url_for('register') }}" class="btn">+ Add Pet</a>
+  </div>
+
+  {% if pets %}
+    <div class="grid cols-4">
+      {% for name, info in pets.items() %}
+        <div class="pet-card">
+          <img src="/{{ info.image }}" alt="{{ name }}" onerror="this.src='/static/placeholder.svg'">
+          <h3>{{ name }}</h3>
+          <p>Last detected: <span style="color: var(--primary); font-weight: 600;">
+            {% if info.get('last_detected') %}
+              {{ info.last_detected }}
+            {% else %}
+              Never
+            {% endif %}
+          </span></p>
+          <p style="margin-top: 0.5rem;">
+            <span class="badge success">
+              {{ info.get('meals_today', 0) }} meals today
+            </span>
+          </p>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p style="font-size: 3rem; margin-bottom: 0.5rem;">🐾</p>
+      <p>No pets registered yet</p>
+      <a href="{{ url_for('register') }}" class="btn" style="margin-top: 1rem;">Register First Pet</a>
+    </div>
+  {% endif %}
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2>📊 Recent Detections</h2>
+    {% if recent_events %}
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Pet</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in recent_events[:5] %}
+            <tr>
+              <td style="font-size: 0.85rem; color: var(--text-light);">{{ event.time }}</td>
+              <td style="font-weight: 600;">{{ event.pet or 'Unknown' }}</td>
+              <td>
+                {% if event.action == 'allow_feeding' %}
+                  <span class="badge success">✓ Fed</span>
+                {% else %}
+                  <span class="badge warning">⊘ Skipped</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-state">
+        <p>No detections yet. Run the test detection to start logging events.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>⚙️ Quick Actions</h2>
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <a href="{{ url_for('register') }}" class="btn" style="text-align: center; width: 100%;">
+        + Register New Pet
+      </a>
+      <a href="{{ url_for('detect') }}" class="btn success" style="text-align: center; width: 100%;">
+        🔍 Run Detection Test
+      </a>
+      <a href="{{ url_for('stats') }}" class="btn" style="text-align: center; width: 100%;">
+        📈 View Analytics
+      </a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

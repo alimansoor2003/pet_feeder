@@ -1,0 +1,44 @@
+{% extends "dashboard_base.html" %}
+{% block dashboard_content %}
+
+<div class="grid cols-2">
+  <div class="card">
+    <h1>📝 Register a Pet</h1>
+    <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+      Add a new pet to the feeder database. We'll use the photo to identify your pet during feeding events.
+    </p>
+
+    <form method="post" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="name">Pet Name *</label>
+        <input type="text" id="name" name="name" placeholder="e.g., Bella, Max, Whiskers" required>
+      </div>
+
+      <div class="form-group">
+        <label for="image">Pet Photo *</label>
+        <input type="file" id="image" name="image" accept="image/png, image/jpeg" required>
+        <p style="font-size: 0.85rem; color: var(--text-light); margin-top: 0.5rem;">
+          📸 Best results: clear face shot, good lighting, minimal background
+        </p>
+      </div>
+
+      <button type="submit" class="success" style="width: 100%; padding: 0.9rem;">
+        ✓ Register Pet
+      </button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>💡 Tips for Best Results</h2>
+    <ul style="line-height: 1.8; color: var(--text-light);">
+      <li><strong>Clear photo:</strong> Make sure your pet's face is visible and in focus</li>
+      <li><strong>Good lighting:</strong> Natural light works best</li>
+      <li><strong>Close-up:</strong> Crop close enough to see facial features</li>
+      <li><strong>Neutral background:</strong> Simpler backgrounds help identification</li>
+      <li><strong>Still pose:</strong> Motion blur reduces accuracy</li>
+      <li><strong>Multiple angles:</strong> Register from a typical viewing angle</li>
+    </ul>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block nav %}
+<div class="topnav">
+  <a href="{{ url_for('home') }}" class="logo">🐾 PawSense</a>
+  <nav>
+    <a href="{{ url_for('home') }}">Dashboard</a>
+    <a href="{{ url_for('register') }}">Register Pet</a>
+    <a href="{{ url_for('detect') }}">Test Detection</a>
+    <a href="{{ url_for('stats') }}">Analytics</a>
+    <a href="{{ url_for('debug_match') }}">Debug</a>
+  </nav>
+  <div class="actions">
+    <span style="color: var(--ink-soft); font-size: 0.9rem; margin-right: 0.5rem;">
+      Hi, {{ user.name if user else '' }}
+    </span>
+    <a href="{{ url_for('logout') }}" class="btn btn-outline">Log Out</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<main class="app-shell">
+  {% block dashboard_content %}{% endblock %}
+</main>
+{% endblock %}

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}PawSense — Smart Pet Feeder{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --sage: #7c9a78;
+      --sage-dark: #5c7a58;
+      --sage-light: #eef3ec;
+      --ink: #1c1c1c;
+      --ink-soft: #5a5a5a;
+      --paper: #ffffff;
+      --bg: #fafaf7;
+      --border: #e7e5df;
+      --shadow: 0 2px 10px rgba(0,0,0,0.06);
+      --shadow-lg: 0 16px 40px rgba(0,0,0,0.10);
+      --radius: 18px;
+
+      /* Aliases so older dashboard markup (written before the redesign)
+         keeps working without needing every inline style rewritten. */
+      --primary: var(--sage);
+      --primary-light: var(--sage);
+      --primary-dark: var(--sage-dark);
+      --success: var(--sage);
+      --warning: #d9a334;
+      --danger: #c25b5b;
+      --text: var(--ink);
+      --text-light: var(--ink-soft);
+      --card: var(--paper);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; }
+
+    /* ---------- Top nav (marketing) ---------- */
+    .topnav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 3rem;
+      background: var(--paper);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topnav .logo {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+    }
+
+    .topnav nav {
+      display: flex;
+      gap: 2.25rem;
+      align-items: center;
+    }
+
+    .topnav nav a {
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: var(--ink-soft);
+      transition: color 0.15s;
+    }
+
+    .topnav nav a:hover { color: var(--ink); }
+
+    .topnav .actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: inline-block;
+      padding: 0.7rem 1.5rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.18s;
+    }
+
+    .btn-primary {
+      background: var(--sage);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--sage-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--ink);
+    }
+
+    .btn-block { width: 100%; text-align: center; }
+
+    /* ---------- Page shell for app/dashboard pages ---------- */
+    main.app-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* ---------- Cards (dashboard reuse) ---------- */
+    .card {
+      background: var(--paper);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .card h1 { font-size: 1.4rem; margin: 0 0 0.75rem 0; }
+    .card h2 { font-size: 1.15rem; margin: 0 0 0.75rem 0; }
+
+    .grid { display: grid; gap: 1.5rem; }
+    .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+
+    .stat-card {
+      background: var(--sage-light);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .stat-card .label { font-size: 0.85rem; color: var(--ink-soft); font-weight: 600; }
+    .stat-card .value { font-size: 2rem; font-weight: 800; color: var(--sage-dark); margin-top: 0.4rem; }
+
+    .pet-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .pet-card:hover { border-color: var(--sage); box-shadow: var(--shadow); }
+    .pet-card img { width: 100%; height: 130px; object-fit: cover; border-radius: 12px; margin-bottom: 0.75rem; }
+    .pet-card h3 { font-size: 1rem; margin: 0 0 0.4rem 0; }
+    .pet-card p { font-size: 0.85rem; color: var(--ink-soft); margin: 0; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .badge.success { background: var(--sage-light); color: var(--sage-dark); }
+    .badge.danger { background: #fbe3e3; color: #9a3a3a; }
+    .badge.warning { background: #fff3d6; color: #8a6310; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+    th { text-align: left; padding: 0.85rem; font-size: 0.85rem; color: var(--ink-soft); border-bottom: 2px solid var(--border); }
+    td { padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--border); }
+
+    .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--ink-soft); }
+
+    /* ---------- <button> elements (some templates use <button> not <a class="btn">) ---------- */
+    button {
+      display: inline-block;
+      padding: 0.7rem 1.5rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      background: var(--sage);
+      color: white;
+      transition: all 0.18s;
+      font-family: inherit;
+    }
+    button:hover { background: var(--sage-dark); }
+    button.secondary { background: var(--border); color: var(--ink); }
+    button.secondary:hover { background: #d8d6cf; }
+    button.success { background: var(--sage); }
+    button.success:hover { background: var(--sage-dark); }
+    button.danger { background: #c25b5b; }
+    button.danger:hover { background: #a84747; }
+
+    .text-muted { color: var(--ink-soft); }
+
+    /* ---------- Timeline (pet profile feeding history) ---------- */
+    .timeline { position: relative; padding-left: 1.75rem; }
+    .timeline-item { position: relative; padding-bottom: 1.5rem; border-left: 2px solid var(--border); padding-left: 1.25rem; margin-left: 0.1rem; }
+    .timeline-item:last-child { border-left-color: transparent; }
+    .timeline-dot { position: absolute; left: -6px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--sage); }
+    .timeline-time { font-size: 0.82rem; color: var(--ink-soft); font-weight: 600; }
+    .timeline-content { margin-top: 0.25rem; }
+
+    input[type=text], input[type=email], input[type=password], input[type=file] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    input:focus { outline: none; border-color: var(--sage); }
+    label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.9rem; }
+    .form-group { margin-bottom: 1.25rem; }
+
+    .flash {
+      padding: 0.9rem 1.25rem;
+      border-radius: 12px;
+      margin-bottom: 1.25rem;
+      font-weight: 500;
+    }
+    .flash.success { background: var(--sage-light); color: var(--sage-dark); }
+    .flash.error { background: #fbe3e3; color: #9a3a3a; }
+
+    /* ---------- Footer ---------- */
+    footer {
+      background: var(--ink);
+      color: #cfcfc9;
+      padding: 3rem 3rem 2rem;
+      margin-top: 4rem;
+      font-size: 0.9rem;
+    }
+    footer a { color: #cfcfc9; text-decoration: none; }
+    footer a:hover { color: white; }
+
+    @media (max-width: 768px) {
+      .topnav { padding: 1rem 1.25rem; flex-wrap: wrap; gap: 0.75rem; }
+      .topnav nav { gap: 1.25rem; flex-wrap: wrap; }
+      main.app-shell { padding: 1.25rem 0.85rem; }
+      .grid.cols-2, .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  {% block nav %}
+  <div class="topnav">
+    <a href="{{ url_for('landing') }}" class="logo">🐾 PawSense</a>
+    <nav>
+      <a href="{{ url_for('landing') }}#mission">Our Mission</a>
+      <a href="{{ url_for('landing') }}#how-it-works">How It Works</a>
+      <a href="{{ url_for('landing') }}#products">Product</a>
+    </nav>
+    <div class="actions">
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('home') }}" class="btn btn-outline">Dashboard</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-primary">Log Out</a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn btn-outline">Log In</a>
+        <a href="{{ url_for('signup') }}" class="btn btn-primary">Sign Up</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endblock %}
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="max-width: 1200px; margin: 1.25rem auto 0; padding: 0 1.5rem;">
+        {% for category, message in messages %}
+          <div class="flash {{ 'error' if category == 'error' else 'success' }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+
+  {% block footer %}
+  <footer>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2rem;">
+      <div>
+        <div style="font-weight: 800; font-size: 1.1rem; color: white; margin-bottom: 0.5rem;">🐾 PawSense</div>
+        <p style="max-width: 280px; color: #a8a89f;">Smart feeding, powered by computer vision — so every pet gets fed by the right bowl, every time.</p>
+      </div>
+      <div>
+        <div style="color: white; font-weight: 600; margin-bottom: 0.75rem;">Product</div>
+        <p><a href="{{ url_for('landing') }}#products">Smart Feeder</a></p>
+        <p><a href="{{ url_for('landing') }}#how-it-works">How It Works</a></p>
+      </div>
+      <div>
+        <div style="color: white; font-weight: 600; margin-bottom: 0.75rem;">Account</div>
+        <p><a href="{{ url_for('signup') }}">Sign Up</a></p>
+        <p><a href="{{ url_for('login') }}">Log In</a></p>
+      </div>
+    </div>
+    <p style="text-align:center; margin-top: 2.5rem; color: #7d7d74;">© 2026 PawSense. All rights reserved.</p>
+  </footer>
+  {% endblock %}
+
+</body>
+</html>

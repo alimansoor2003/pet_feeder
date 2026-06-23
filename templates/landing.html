@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}PawSense — Smart Pet Feeder powered by AI{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section style="background: var(--sage-light); padding: 5rem 3rem 4rem;">
+  <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 1fr; gap: 3rem; align-items: center;">
+    <div>
+      <span class="badge success" style="margin-bottom: 1.25rem;">AI-Powered Feeding</span>
+      <h1 style="font-size: 3rem; line-height: 1.1; font-weight: 800; margin: 0.5rem 0 1.25rem; letter-spacing: -1px;">
+        The right bowl finds the right pet, every time.
+      </h1>
+      <p style="font-size: 1.1rem; color: var(--ink-soft); max-width: 480px; margin-bottom: 2rem;">
+        PawSense uses computer vision to recognize each of your pets individually,
+        so feeding stays personal, accurate, and worry-free — even with multiple
+        animals sharing a home.
+      </p>
+      <div style="display: flex; gap: 1rem;">
+        <a href="{{ url_for('signup') }}" class="btn btn-primary" style="padding: 0.85rem 2rem; font-size: 1rem;">Get Started Free</a>
+        <a href="#how-it-works" class="btn btn-outline" style="padding: 0.85rem 2rem; font-size: 1rem;">See How It Works</a>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: center;">
+      <div style="width: 100%; max-width: 420px; aspect-ratio: 1; background: var(--paper); border-radius: 28px; box-shadow: var(--shadow-lg); display: flex; align-items: center; justify-content: center; font-size: 6rem;">
+        🐶🐱
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section id="mission" style="padding: 5rem 3rem; max-width: 1200px; margin: 0 auto;">
+  <div style="text-align: center; max-width: 700px; margin: 0 auto 3rem;">
+    <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">Our Mission</h2>
+    <p style="color: var(--ink-soft); font-size: 1.05rem;">
+      We believe every pet deserves food made just for them — not whichever
+      animal gets to the bowl first. PawSense was built to bring fairness,
+      health tracking, and peace of mind to multi-pet households, using the
+      same computer-vision technology found in modern security and identity systems.
+    </p>
+  </div>
+
+  <div class="grid cols-3">
+    <div class="card" style="text-align: center;">
+      <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🎯</div>
+      <h3 style="margin: 0 0 0.5rem;">Personalized Feeding</h3>
+      <p style="color: var(--ink-soft); font-size: 0.92rem; margin: 0;">Every pet is recognized individually, so portions and schedules stay exactly right for them.</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🛡️</div>
+      <h3 style="margin: 0 0 0.5rem;">Healthier Habits</h3>
+      <p style="color: var(--ink-soft); font-size: 0.92rem; margin: 0;">Built-in feeding limits prevent overfeeding and keep an eye on irregular eating patterns.</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">📊</div>
+      <h3 style="margin: 0 0 0.5rem;">Full Visibility</h3>
+      <p style="color: var(--ink-soft); font-size: 0.92rem; margin: 0;">A personal dashboard shows you exactly who ate what, and when — from anywhere.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCT -->
+<section id="products" style="background: var(--paper); padding: 5rem 3rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;">
+    <div style="display: flex; justify-content: center;">
+      <div style="width: 100%; max-width: 380px; aspect-ratio: 4/5; background: var(--sage-light); border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 5rem;">
+        📷🍽️
+      </div>
+    </div>
+    <div>
+      <span class="badge success" style="margin-bottom: 1rem;">The Product</span>
+      <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">One feeder. Every pet, recognized.</h2>
+      <p style="color: var(--ink-soft); margin-bottom: 1.5rem;">
+        A single camera-equipped feeder watches the bowl, detects when an
+        animal approaches, and matches their face against your registered
+        pets — then decides whether to dispense food based on your rules.
+      </p>
+      <ul style="color: var(--ink-soft); padding-left: 1.25rem; line-height: 1.9;">
+        <li>Works with any number of dogs or cats in the home</li>
+        <li>Runs entirely offline — no cloud dependency required</li>
+        <li>Feeding limits enforced automatically (portions, schedule, daily caps)</li>
+        <li>Full history available in your personal dashboard</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" style="padding: 5rem 3rem; max-width: 1200px; margin: 0 auto;">
+  <div style="text-align: center; max-width: 700px; margin: 0 auto 3rem;">
+    <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">How It Works</h2>
+    <p style="color: var(--ink-soft); font-size: 1.05rem;">From photo to feeding decision in four simple steps.</p>
+  </div>
+
+  <div class="grid cols-4">
+    <div class="card" style="text-align: center;">
+      <div style="width: 48px; height: 48px; background: var(--sage); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 1rem;">1</div>
+      <h3 style="margin: 0 0 0.5rem; font-size: 1rem;">Register Your Pet</h3>
+      <p style="color: var(--ink-soft); font-size: 0.88rem; margin: 0;">Upload one clear photo of each pet to your dashboard.</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div style="width: 48px; height: 48px; background: var(--sage); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 1rem;">2</div>
+      <h3 style="margin: 0 0 0.5rem; font-size: 1rem;">Detect the Animal</h3>
+      <p style="color: var(--ink-soft); font-size: 0.88rem; margin: 0;">YOLO object detection checks whether a dog or cat is at the bowl.</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div style="width: 48px; height: 48px; background: var(--sage); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 1rem;">3</div>
+      <h3 style="margin: 0 0 0.5rem; font-size: 1rem;">Identify the Pet</h3>
+      <p style="color: var(--ink-soft); font-size: 0.88rem; margin: 0;">An embedding model matches them against your registered pets.</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div style="width: 48px; height: 48px; background: var(--sage); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 1rem;">4</div>
+      <h3 style="margin: 0 0 0.5rem; font-size: 1rem;">Feed, Within Limits</h3>
+      <p style="color: var(--ink-soft); font-size: 0.88rem; margin: 0;">Feeding is allowed or paused based on schedule and daily limits.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="background: var(--ink); padding: 4rem 3rem; text-align: center;">
+  <h2 style="color: white; font-size: 1.8rem; margin-bottom: 1rem;">Ready to give every pet their own bowl experience?</h2>
+  <p style="color: #b8b8af; max-width: 500px; margin: 0 auto 2rem;">Create your free account and register your first pet in under a minute.</p>
+  <a href="{{ url_for('signup') }}" class="btn btn-primary" style="padding: 0.9rem 2.25rem; font-size: 1rem;">Sign Up Free</a>
+</section>
+
+{% endblock %}

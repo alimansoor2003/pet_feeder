@@ -1,0 +1,13 @@
+{
+  "khalifa": {
+    "image": "uploads/khalifa_test1.jpg"
+  },
+  "Alim": {
+    "image": "uploads/alim_test2.jpg"
+  },
+  "momo": {
+    "image": "uploads/momo_testNew.png",
+    "registered": "2026-06-23 15:30:30.608516",
+    "last_detected": null
+  }
+}
