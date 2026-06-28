@@ -6,17 +6,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root {
-      --sage: #7c9a78;
-      --sage-dark: #5c7a58;
-      --sage-light: #eef3ec;
-      --ink: #1c1c1c;
-      --ink-soft: #5a5a5a;
+      /* ---------- Brand palette: orange + navy + peach ---------- */
+      --brand: #f2762e;
+      --brand-dark: #d9601c;
+      --brand-light: #ffe9d9;
+      --navy: #1f2247;
+      --cream: #fff7ee;
+
+      /* Old variable names kept as aliases so every existing component
+         (cards, buttons, badges, stat-cards) repaints automatically —
+         nothing downstream needs to change. */
+      --sage: var(--brand);
+      --sage-dark: var(--brand-dark);
+      --sage-light: var(--brand-light);
+      --ink: var(--navy);
+      --ink-soft: #6b6258;
       --paper: #ffffff;
-      --bg: #fafaf7;
-      --border: #e7e5df;
+      --bg: var(--cream);
+      --border: #f0e3d5;
       --shadow: 0 2px 10px rgba(0,0,0,0.06);
       --shadow-lg: 0 16px 40px rgba(0,0,0,0.10);
       --radius: 18px;
+      --status-good: #2f9e5c;
+
+      /* ---------- Claymorphism tokens ----------
+         Clay shapes use a paired light+dark shadow to fake a soft
+         puffy extrusion, plus a subtle inset highlight on top.
+         Kept as variables so every clay surface stays consistent. */
+      --clay-light: #ffffff;
+      --clay-shadow-dark: rgba(242, 118, 46, 0.30);
+      --clay-shadow-soft: rgba(242, 118, 46, 0.15);
+      --clay-highlight: rgba(255, 255, 255, 0.6);
+      --clay-raised:
+        -6px -6px 14px var(--clay-light),
+        8px 8px 18px var(--clay-shadow-soft),
+        inset 0 1px 0 var(--clay-highlight);
+      --clay-raised-hover:
+        -7px -7px 16px var(--clay-light),
+        10px 10px 22px var(--clay-shadow-dark),
+        inset 0 1px 0 var(--clay-highlight);
+      --clay-pressed:
+        inset 3px 3px 8px var(--clay-shadow-soft),
+        inset -2px -2px 6px var(--clay-light);
+
+      /* ---------- Motion tokens ---------- */
+      --ease-clay: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --dur-fast: 150ms;
+      --dur-base: 280ms;
+      --dur-slow: 450ms;
 
       /* Aliases so older dashboard markup (written before the redesign)
          keeps working without needing every inline style rewritten. */
@@ -29,6 +67,16 @@
       --text: var(--ink);
       --text-light: var(--ink-soft);
       --card: var(--paper);
+    }
+
+    /* Respect users who've asked for less motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
     }
 
     * { box-sizing: border-box; }
@@ -65,6 +113,17 @@
       align-items: center;
       gap: 0.4rem;
       text-decoration: none;
+      transition: transform var(--dur-fast) ease;
+    }
+
+    .topnav .logo:hover {
+      animation: clay-wiggle 0.5s var(--ease-out);
+    }
+
+    @keyframes clay-wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-4deg) scale(1.05); }
+      75% { transform: rotate(4deg) scale(1.05); }
     }
 
     .topnav nav {
@@ -79,9 +138,24 @@
       font-size: 0.95rem;
       color: var(--ink-soft);
       transition: color 0.15s;
+      position: relative;
+      padding-bottom: 4px;
     }
 
     .topnav nav a:hover { color: var(--ink); }
+
+    .topnav nav a.active { color: var(--ink); font-weight: 600; }
+    .topnav nav a.active::after {
+      content: "";
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--brand);
+    }
 
     .topnav .actions {
       display: flex;
@@ -99,18 +173,28 @@
       text-decoration: none;
       cursor: pointer;
       border: none;
-      transition: all 0.18s;
+      transition: transform var(--dur-base) var(--ease-clay),
+                  box-shadow var(--dur-base) var(--ease-out),
+                  background-color var(--dur-fast) ease;
+      will-change: transform;
     }
 
     .btn-primary {
       background: var(--sage);
       color: white;
+      box-shadow: var(--clay-raised);
     }
 
     .btn-primary:hover {
       background: var(--sage-dark);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow);
+      transform: translateY(-3px);
+      box-shadow: var(--clay-raised-hover);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0) scale(0.97);
+      box-shadow: var(--clay-pressed);
+      transition-duration: var(--dur-fast);
     }
 
     .btn-outline {
@@ -121,6 +205,12 @@
 
     .btn-outline:hover {
       border-color: var(--ink);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline:active {
+      transform: translateY(0) scale(0.97);
+      transition-duration: var(--dur-fast);
     }
 
     .btn-block { width: 100%; text-align: center; }
@@ -137,10 +227,29 @@
       background: var(--paper);
       border-radius: var(--radius);
       padding: 1.75rem;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
+      box-shadow: var(--clay-raised);
+      border: 1px solid rgba(242, 118, 46, 0.08);
       margin-bottom: 1.5rem;
+      transition: transform var(--dur-base) var(--ease-out),
+                  box-shadow var(--dur-base) var(--ease-out);
+      animation: clay-rise var(--dur-slow) var(--ease-out) backwards;
     }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--clay-raised-hover);
+    }
+
+    @keyframes clay-rise {
+      from { opacity: 0; transform: translateY(14px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Stagger card entrances slightly within a grid so they don't pop in unison */
+    .grid .card:nth-child(1) { animation-delay: 0ms; }
+    .grid .card:nth-child(2) { animation-delay: 60ms; }
+    .grid .card:nth-child(3) { animation-delay: 120ms; }
+    .grid .card:nth-child(4) { animation-delay: 180ms; }
 
     .card h1 { font-size: 1.4rem; margin: 0 0 0.75rem 0; }
     .card h2 { font-size: 1.15rem; margin: 0 0 0.75rem 0; }
@@ -155,19 +264,53 @@
       border-radius: var(--radius);
       padding: 1.5rem;
       text-align: center;
+      box-shadow: var(--clay-raised);
+      transition: transform var(--dur-base) var(--ease-clay),
+                  box-shadow var(--dur-base) var(--ease-out);
+    }
+    .stat-card:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: var(--clay-raised-hover);
     }
     .stat-card .label { font-size: 0.85rem; color: var(--ink-soft); font-weight: 600; }
-    .stat-card .value { font-size: 2rem; font-weight: 800; color: var(--sage-dark); margin-top: 0.4rem; }
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--sage-dark);
+      margin-top: 0.4rem;
+      transition: transform var(--dur-base) var(--ease-clay);
+    }
+    .stat-card:hover .value { transform: scale(1.08); }
 
     .pet-card {
-      border: 2px solid var(--border);
+      border: none;
       border-radius: var(--radius);
       padding: 1rem;
       text-align: center;
-      transition: all 0.2s;
+      background: var(--paper);
+      box-shadow: var(--clay-raised);
+      transition: transform var(--dur-base) var(--ease-clay),
+                  box-shadow var(--dur-base) var(--ease-out);
+      cursor: pointer;
     }
-    .pet-card:hover { border-color: var(--sage); box-shadow: var(--shadow); }
-    .pet-card img { width: 100%; height: 130px; object-fit: cover; border-radius: 12px; margin-bottom: 0.75rem; }
+    .pet-card:hover {
+      transform: translateY(-5px) rotate(-0.5deg);
+      box-shadow: var(--clay-raised-hover);
+    }
+    .pet-card:active {
+      transform: translateY(-1px) scale(0.98);
+      box-shadow: var(--clay-pressed);
+      transition-duration: var(--dur-fast);
+    }
+    .pet-card img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 0.75rem;
+      transition: transform var(--dur-base) var(--ease-out);
+    }
+    .pet-card:hover img { transform: scale(1.04); }
     .pet-card h3 { font-size: 1rem; margin: 0 0 0.4rem 0; }
     .pet-card p { font-size: 0.85rem; color: var(--ink-soft); margin: 0; }
 
@@ -177,16 +320,34 @@
       border-radius: 999px;
       font-size: 0.78rem;
       font-weight: 700;
+      animation: clay-pop var(--dur-base) var(--ease-clay) backwards;
     }
     .badge.success { background: var(--sage-light); color: var(--sage-dark); }
     .badge.danger { background: #fbe3e3; color: #9a3a3a; }
     .badge.warning { background: #fff3d6; color: #8a6310; }
+
+    @keyframes clay-pop {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
 
     table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
     th { text-align: left; padding: 0.85rem; font-size: 0.85rem; color: var(--ink-soft); border-bottom: 2px solid var(--border); }
     td { padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--border); }
 
     .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--ink-soft); }
+
+    /* ---------- Scroll reveal (landing page sections) ---------- */
+    .reveal-init {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity var(--dur-slow) var(--ease-out),
+                  transform var(--dur-slow) var(--ease-out);
+    }
+    .reveal-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
     /* ---------- <button> elements (some templates use <button> not <a class="btn">) ---------- */
     button {
@@ -199,10 +360,22 @@
       border: none;
       background: var(--sage);
       color: white;
-      transition: all 0.18s;
       font-family: inherit;
+      box-shadow: var(--clay-raised);
+      transition: transform var(--dur-base) var(--ease-clay),
+                  box-shadow var(--dur-base) var(--ease-out),
+                  background-color var(--dur-fast) ease;
     }
-    button:hover { background: var(--sage-dark); }
+    button:hover {
+      background: var(--sage-dark);
+      transform: translateY(-3px);
+      box-shadow: var(--clay-raised-hover);
+    }
+    button:active {
+      transform: translateY(0) scale(0.97);
+      box-shadow: var(--clay-pressed);
+      transition-duration: var(--dur-fast);
+    }
     button.secondary { background: var(--border); color: var(--ink); }
     button.secondary:hover { background: #d8d6cf; }
     button.success { background: var(--sage); }
@@ -227,8 +400,19 @@
       border-radius: 10px;
       font-size: 0.95rem;
       font-family: inherit;
+      background: var(--bg);
+      box-shadow: inset 2px 2px 6px rgba(242, 118, 46, 0.10),
+                  inset -2px -2px 6px var(--clay-light);
+      transition: box-shadow var(--dur-base) var(--ease-out),
+                  border-color var(--dur-fast) ease;
     }
-    input:focus { outline: none; border-color: var(--sage); }
+    input:focus {
+      outline: none;
+      border-color: var(--sage);
+      box-shadow: inset 2px 2px 6px rgba(242, 118, 46, 0.10),
+                  inset -2px -2px 6px var(--clay-light),
+                  0 0 0 4px var(--sage-light);
+    }
     label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.9rem; }
     .form-group { margin-bottom: 1.25rem; }
 
@@ -237,9 +421,16 @@
       border-radius: 12px;
       margin-bottom: 1.25rem;
       font-weight: 500;
+      box-shadow: var(--clay-raised);
+      animation: clay-slide-in var(--dur-slow) var(--ease-out) backwards;
     }
     .flash.success { background: var(--sage-light); color: var(--sage-dark); }
     .flash.error { background: #fbe3e3; color: #9a3a3a; }
+
+    @keyframes clay-slide-in {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
     /* ---------- Footer ---------- */
     footer {
@@ -267,7 +458,7 @@
   <div class="topnav">
     <a href="{{ url_for('landing') }}" class="logo">🐾 PawSense</a>
     <nav>
-      <a href="{{ url_for('landing') }}#mission">Our Mission</a>
+      <a href="{{ url_for('landing') }}#mission" class="active">Our Mission</a>
       <a href="{{ url_for('landing') }}#how-it-works">How It Works</a>
       <a href="{{ url_for('landing') }}#products">Product</a>
     </nav>
@@ -316,6 +507,29 @@
     <p style="text-align:center; margin-top: 2.5rem; color: #7d7d74;">© 2026 PawSense. All rights reserved.</p>
   </footer>
   {% endblock %}
+
+  <script>
+    // Lightweight scroll-reveal: fades+lifts sections into view once,
+    // using IntersectionObserver so there's no scroll-event listener
+    // running continuously (cheap on battery/CPU).
+    document.addEventListener('DOMContentLoaded', function () {
+      var targets = document.querySelectorAll('section, .reveal-on-scroll');
+      if (!('IntersectionObserver' in window) || targets.length === 0) return;
+
+      targets.forEach(function (el) { el.classList.add('reveal-init'); });
+
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+      targets.forEach(function (el) { observer.observe(el); });
+    });
+  </script>
 
 </body>
 </html>
