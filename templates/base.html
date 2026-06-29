@@ -464,11 +464,11 @@
     </nav>
     <div class="actions">
       {% if session.get('user_id') %}
-        <a href="{{ url_for('home') }}" class="btn btn-outline">Dashboard</a>
-        <a href="{{ url_for('logout') }}" class="btn btn-primary">Log Out</a>
+        <a href="{{ url_for('auth.post_login_redirect') }}" class="btn btn-outline">Dashboard</a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-primary">Log Out</a>
       {% else %}
-        <a href="{{ url_for('login') }}" class="btn btn-outline">Log In</a>
-        <a href="{{ url_for('signup') }}" class="btn btn-primary">Sign Up</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Log In</a>
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-primary">Sign Up</a>
       {% endif %}
     </div>
   </div>
@@ -500,8 +500,8 @@
       </div>
       <div>
         <div style="color: white; font-weight: 600; margin-bottom: 0.75rem;">Account</div>
-        <p><a href="{{ url_for('signup') }}">Sign Up</a></p>
-        <p><a href="{{ url_for('login') }}">Log In</a></p>
+        <p><a href="{{ url_for('auth.signup') }}">Sign Up</a></p>
+        <p><a href="{{ url_for('auth.login') }}">Log In</a></p>
       </div>
     </div>
     <p style="text-align:center; margin-top: 2.5rem; color: #7d7d74;">© 2026 PawSense. All rights reserved.</p>
