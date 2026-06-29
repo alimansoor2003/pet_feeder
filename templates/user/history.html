@@ -1,0 +1,35 @@
+{% extends "user/_nav.html" %}
+{% block title %}History — PawSense{% endblock %}
+{% block page_content %}
+
+<div class="card">
+  <h2>Activity History</h2>
+  <p class="text-muted">Feeding records, AI detections, and device events — most recent first.</p>
+
+  {% if events %}
+    <table>
+      <thead><tr><th>Time</th><th>Type</th><th>Event</th></tr></thead>
+      <tbody>
+        {% for e in events %}
+          <tr>
+            <td style="font-size:0.82rem; color:var(--ink-soft);">{{ e.timestamp }}</td>
+            <td>
+              {% if e.kind == 'feeding' %}
+                <span class="badge success">🍽️ Feeding</span>
+              {% elif e.kind == 'detection' %}
+                <span class="badge warning">🔍 Detection</span>
+              {% else %}
+                <span class="badge" style="background:var(--brand-light); color:var(--brand-dark);">📡 Device</span>
+              {% endif %}
+            </td>
+            <td>{{ e.message }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state"><p>No history yet.</p></div>
+  {% endif %}
+</div>
+
+{% endblock %}

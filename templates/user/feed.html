@@ -1,0 +1,58 @@
+{% extends "user/_nav.html" %}
+{% block title %}Feeding — PawSense{% endblock %}
+{% block page_content %}
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2>Manual Feeding</h2>
+    <p class="text-muted">Send an immediate feed command to your feeder.</p>
+    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+      <span class="badge {{ 'success' if device.status == 'online' else 'danger' }}">
+        {{ '● Online' if device.status == 'online' else '● Offline' }}
+      </span>
+      <span class="text-muted" style="font-size:0.85rem;">Food level: {{ device.food_level }}%</span>
+    </div>
+    <form method="post">
+      <input type="hidden" name="action" value="manual_feed">
+      <button type="submit" class="btn btn-primary btn-block" style="padding:1rem;">🍽️ Feed Now</button>
+    </form>
+    {% if device.status != 'online' %}
+      <p style="font-size:0.8rem; color:var(--ink-soft); margin-top:0.75rem;">⚠️ Feeder appears offline — command will be queued and run once it reconnects.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Feeding Schedule</h2>
+    <p class="text-muted">Free-text for now — structured per-pet schedules are next on the roadmap.</p>
+    <form method="post">
+      <input type="hidden" name="action" value="update_schedule">
+      <div class="form-group">
+        <textarea name="schedule" rows="4" style="width:100%; padding:0.75rem 1rem; border-radius:10px; border:1.5px solid var(--border); font-family:inherit;" placeholder="e.g. Max: 8am, 6pm — Bella: 9am, 7pm">{{ device.feeding_schedule or '' }}</textarea>
+      </div>
+      <button type="submit" class="btn btn-outline btn-block">Save Schedule</button>
+    </form>
+  </div>
+</div>
+
+<div class="card" style="margin-top:1.5rem;">
+  <h2>Registered Pets</h2>
+  {% if pets %}
+    <table>
+      <thead><tr><th>Name</th><th>Type</th><th>Feeding Amount</th><th>Last Fed</th></tr></thead>
+      <tbody>
+        {% for name, info in pets.items() %}
+          <tr>
+            <td>{{ name }}</td>
+            <td>{{ info.type }}</td>
+            <td>{{ info.feeding_amount }}g</td>
+            <td>{{ info.last_fed }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="text-muted">No pets registered yet.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

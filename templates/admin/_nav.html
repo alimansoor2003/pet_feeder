@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block nav %}
+<div class="topnav" style="background: var(--navy);">
+  <a href="{{ url_for('admin.dashboard') }}" class="logo" style="color: white;">🐾 PawSense <span style="font-size: 0.75rem; background: var(--brand); color: white; padding: 0.15rem 0.5rem; border-radius: 999px; margin-left: 0.3rem;">ADMIN</span></a>
+  <nav>
+    <a href="{{ url_for('admin.dashboard') }}" style="color: #cfd1e0;">Overview</a>
+    <a href="{{ url_for('admin.users_page') }}" style="color: #cfd1e0;">Users</a>
+    <a href="{{ url_for('admin.devices_page') }}" style="color: #cfd1e0;">Devices</a>
+    <a href="{{ url_for('admin.analytics_page') }}" style="color: #cfd1e0;">AI Analytics</a>
+    <a href="{{ url_for('admin.logs_page') }}" style="color: #cfd1e0;">Logs</a>
+  </nav>
+  <div class="actions">
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline" style="color: white; border-color: #444a73;">Log Out</a>
+  </div>
+</div>
+{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+<main class="app-shell">
+  {% block page_content %}{% endblock %}
+</main>
+{% endblock %}

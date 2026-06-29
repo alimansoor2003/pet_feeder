@@ -1,0 +1,18 @@
+{% extends "admin/_nav.html" %}
+{% block title %}AI Analytics — Admin{% endblock %}
+{% block page_content %}
+
+<h1>AI Analytics</h1>
+
+<div class="grid cols-3">
+  <div class="stat-card"><div class="label">Recognized</div><div class="value">{{ total_recognized }}</div></div>
+  <div class="stat-card"><div class="label">Ignored / Unknown</div><div class="value">{{ total_ignored }}</div></div>
+  <div class="stat-card"><div class="label">Recognition Rate</div><div class="value">{{ recognition_rate }}%</div></div>
+</div>
+
+<div class="card" style="margin-top:1.5rem;">
+  <h2>Model Performance</h2>
+  <p class="text-muted">Ground-truth accuracy tracking (precision/recall against labeled test sets) isn't wired up yet — the figures above are raw recognized-vs-ignored counts from production traffic, not validated accuracy. Hook in a labeled eval set here when ready.</p>
+</div>
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "admin/_nav.html" %}
+{% block title %}System Logs — Admin{% endblock %}
+{% block page_content %}
+
+<h1>System Logs</h1>
+<div class="card">
+  <table>
+    <thead><tr><th>Time</th><th>User</th><th>Type</th><th>Event</th></tr></thead>
+    <tbody>
+      {% for log in logs %}
+        <tr>
+          <td style="font-size:0.8rem; color:var(--ink-soft);">{{ log.timestamp }}</td>
+          <td style="font-size:0.85rem;">{{ log.user }}</td>
+          <td>
+            {% if log.kind == 'ai' %}
+              <span class="badge warning">🤖 AI</span>
+            {% else %}
+              <span class="badge" style="background:var(--brand-light); color:var(--brand-dark);">📡 Device</span>
+            {% endif %}
+          </td>
+          <td>{{ log.message }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

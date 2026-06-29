@@ -1,0 +1,26 @@
+{% extends "admin/_nav.html" %}
+{% block title %}Admin Overview — PawSense{% endblock %}
+{% block page_content %}
+
+<h1>Platform Overview</h1>
+
+<div class="grid cols-4">
+  <div class="stat-card"><div class="label">Total Users</div><div class="value">{{ user_count }}</div></div>
+  <div class="stat-card"><div class="label">Total Pets</div><div class="value">{{ pet_count }}</div></div>
+  <div class="stat-card"><div class="label">Connected Devices</div><div class="value">{{ connected_device_count }}/{{ device_count }}</div></div>
+  <div class="stat-card"><div class="label">Feeding Operations</div><div class="value">{{ feeding_count }}</div></div>
+</div>
+
+<div class="grid cols-3" style="margin-top:1.5rem;">
+  <a href="{{ url_for('admin.users_page') }}" class="card" style="text-decoration:none; display:block;">
+    <h3>👥 Manage Users →</h3>
+  </a>
+  <a href="{{ url_for('admin.devices_page') }}" class="card" style="text-decoration:none; display:block;">
+    <h3>📡 Manage Devices →</h3>
+  </a>
+  <a href="{{ url_for('admin.logs_page') }}" class="card" style="text-decoration:none; display:block;">
+    <h3>📋 View System Logs →</h3>
+  </a>
+</div>
+
+{% endblock %}

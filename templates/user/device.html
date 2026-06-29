@@ -1,0 +1,50 @@
+{% extends "user/_nav.html" %}
+{% block title %}Device — PawSense{% endblock %}
+{% block page_content %}
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2>Feeder Hardware</h2>
+    <table>
+      <tr><td class="text-muted">Device ID</td><td><code>{{ device.device_id }}</code></td></tr>
+      <tr><td class="text-muted">Connection Status</td><td>
+        <span class="badge {{ 'success' if device.status == 'online' else 'danger' }}">
+          {{ '● Online' if device.status == 'online' else '● Offline' }}
+        </span>
+      </td></tr>
+      <tr><td class="text-muted">Food Container Level</td><td>{{ device.food_level }}%</td></tr>
+      <tr><td class="text-muted">Last Connection</td><td>{{ device.last_connection or 'Never' }}</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>ESP32 Setup</h2>
+    <p class="text-muted">Use these credentials in your ESP32 firmware to connect this feeder to your account.</p>
+    <div class="form-group">
+      <label>Device ID</label>
+      <input type="text" value="{{ device.device_id }}" readonly>
+    </div>
+    <div class="form-group">
+      <label>API Key</label>
+      <input type="text" value="{{ device.api_key }}" readonly>
+    </div>
+    <p style="font-size:0.8rem; color:var(--ink-soft);">Keep the API key private — it lets your feeder report sensor data and receive feed commands. See the README for the full ESP32 HTTP contract.</p>
+  </div>
+</div>
+
+<div class="card" style="margin-top:1.5rem;">
+  <h2>Recent Device Events</h2>
+  {% if device_events %}
+    <table>
+      <tbody>
+        {% for e in device_events %}
+          <tr><td style="font-size:0.85rem;">{{ e }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state"><p>No device events yet — once your ESP32 sends a heartbeat, it'll show up here.</p></div>
+  {% endif %}
+</div>
+
+{% endblock %}

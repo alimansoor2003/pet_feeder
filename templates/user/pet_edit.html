@@ -1,0 +1,35 @@
+{% extends "user/_nav.html" %}
+{% block title %}Edit {{ name }} — PawSense{% endblock %}
+{% block page_content %}
+
+<div class="card" style="max-width: 480px; margin: 0 auto;">
+  <h2>Edit {{ name }}</h2>
+  <form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+      <label>Photo (leave blank to keep current)</label>
+      <input type="file" name="image" accept=".jpg,.jpeg,.png">
+    </div>
+    <div class="form-group">
+      <label>Type</label>
+      <select name="type" style="width:100%; padding:0.75rem 1rem; border-radius:10px; border:1.5px solid var(--border); font-family:inherit;">
+        <option {{ 'selected' if pet.type == 'Dog' else '' }}>Dog</option>
+        <option {{ 'selected' if pet.type == 'Cat' else '' }}>Cat</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Age (years)</label>
+      <input type="number" name="age" value="{{ pet.age }}" min="0" step="1">
+    </div>
+    <div class="form-group">
+      <label>Weight (kg)</label>
+      <input type="number" name="weight" value="{{ pet.weight }}" min="0" step="0.1">
+    </div>
+    <div class="form-group">
+      <label>Feeding Amount (grams per meal)</label>
+      <input type="number" name="feeding_amount" value="{{ pet.feeding_amount }}" min="0" step="1">
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+  </form>
+</div>
+
+{% endblock %}

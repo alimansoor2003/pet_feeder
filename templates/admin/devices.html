@@ -1,0 +1,23 @@
+{% extends "admin/_nav.html" %}
+{% block title %}Devices — Admin{% endblock %}
+{% block page_content %}
+
+<h1>Devices</h1>
+<div class="card">
+  <table>
+    <thead><tr><th>Device ID</th><th>Owner</th><th>Status</th><th>Food Level</th><th>Last Connection</th></tr></thead>
+    <tbody>
+      {% for d in devices %}
+        <tr>
+          <td><code>{{ d.device_id }}</code></td>
+          <td>{{ d.owner_name }} ({{ d.owner_email }})</td>
+          <td><span class="badge {{ 'success' if d.status == 'online' else 'danger' }}">{{ d.status }}</span></td>
+          <td>{{ d.food_level }}%</td>
+          <td style="font-size:0.82rem; color:var(--ink-soft);">{{ d.last_connection }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "user/_nav.html" %}
+{% block title %}Dashboard — PawSense{% endblock %}
+{% block page_content %}
+
+<div class="card" style="background: var(--brand-light); border: none;">
+  <h1>Welcome back, {{ user.name }} 👋</h1>
+  <p style="color: var(--ink-soft); margin: 0;">Here's how things look right now.</p>
+</div>
+
+{% if device.food_level < 20 %}
+  <div class="flash error">⚠️ Food level is low ({{ device.food_level }}%) — refill soon.</div>
+{% endif %}
+{% if device.status == 'offline' %}
+  <div class="flash error">⚠️ Your feeder hasn't checked in recently — it may be offline.</div>
+{% endif %}
+
+<div class="grid cols-4">
+  <div class="stat-card">
+    <div class="label">Registered Pets</div>
+    <div class="value">{{ pet_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Feeder Status</div>
+    <div class="value" style="color: {{ 'var(--status-good)' if device.status == 'online' else '#c25b5b' }};">
+      {{ 'Online' if device.status == 'online' else 'Offline' }}
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Food Level</div>
+    <div class="value">{{ device.food_level }}%</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Fed Today</div>
+    <div class="value">{{ feedings_today }}</div>
+  </div>
+</div>
+
+<h2 style="margin-top: 2rem;">Your Pets</h2>
+{% if pets %}
+  <div class="grid cols-3">
+    {% for name, info in pets.items() %}
+      <div class="pet-card" onclick="window.location.href='{{ url_for('user.pets_page') }}'">
+        <img src="/{{ info.image }}" alt="{{ name }}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%23ffe9d9%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2255%22 font-size=%2240%22 text-anchor=%22middle%22%3E🐾%3C/text%3E%3C/svg%3E'">
+        <h3>{{ name }}</h3>
+        <p>{{ info.type }} · Last fed: {{ info.last_fed }}</p>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card empty-state">
+    <p>No pets registered yet.</p>
+    <a href="{{ url_for('user.pets_page') }}" class="btn btn-primary">+ Add Your First Pet</a>
+  </div>
+{% endif %}
+
+<div class="card" style="margin-top: 2rem;">
+  <h2>Recent Activity</h2>
+  {% if recent_events %}
+    <table>
+      <thead><tr><th>Time</th><th>Pet</th><th>Result</th></tr></thead>
+      <tbody>
+        {% for e in recent_events %}
+          <tr>
+            <td>{{ e.time }}</td>
+            <td>{{ e.pet }}</td>
+            <td>
+              {% if e.action == 'allow_feeding' %}
+                <span class="badge success">✓ Fed</span>
+              {% else %}
+                <span class="badge warning">⊘ Skipped</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="text-muted">No activity yet. Try the AI Recognition page to run a test detection.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

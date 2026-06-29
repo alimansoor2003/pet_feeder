@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block nav %}
+<div class="topnav">
+  <a href="{{ url_for('user.dashboard') }}" class="logo">🐾 PawSense</a>
+  <nav>
+    <a href="{{ url_for('user.dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('user.pets_page') }}">My Pets</a>
+    <a href="{{ url_for('user.feed_page') }}">Feeding</a>
+    <a href="{{ url_for('user.ai_page') }}">AI Recognition</a>
+    <a href="{{ url_for('user.history_page') }}">History</a>
+    <a href="{{ url_for('user.device_page') }}">Device</a>
+  </nav>
+  <div class="actions">
+    <span style="color: var(--ink-soft); font-size: 0.9rem; margin-right: 0.5rem;">Hi, {{ user.name if user else '' }}</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">Log Out</a>
+  </div>
+</div>
+{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+<main class="app-shell">
+  {% block page_content %}{% endblock %}
+</main>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "user/_nav.html" %}
+{% block title %}AI Recognition — PawSense{% endblock %}
+{% block page_content %}
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2>Camera Status</h2>
+    <span class="badge {{ 'success' if device.status == 'online' else 'danger' }}">
+      {{ '● Camera Online' if device.status == 'online' else '● Camera Offline' }}
+    </span>
+    <p class="text-muted" style="margin-top:1rem;">Upload a test image below to simulate a detection — this is the same pipeline your live camera feed will use once connected.</p>
+    <form method="post" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>Test Image</label>
+        <input type="file" name="frame" accept=".jpg,.jpeg,.png" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">🔍 Run Detection</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Detection Result</h2>
+    {% if result %}
+      {% if result.pet and result.pet != 'Unknown' %}
+        <div style="text-align:center; padding:1.5rem 0;">
+          <div style="font-size:2.5rem;">🐾</div>
+          <div style="font-size:1.4rem; font-weight:800; color:var(--navy); margin:0.5rem 0;">{{ result.pet }}</div>
+          <div class="badge success" style="font-size:1rem; padding:0.5rem 1.25rem;">{{ (result.score * 100) | round(1) }}% confidence</div>
+          <p class="text-muted" style="margin-top:1rem;">
+            {{ 'Feeding allowed ✓' if result.action == 'allow_feeding' else 'Feeding skipped' }}
+          </p>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <p>{{ 'No animal detected.' if result.animal == 'none' else 'Animal detected, but not recognized as a registered pet.' }}</p>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="empty-state"><p>Upload an image to see a detection result here.</p></div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
