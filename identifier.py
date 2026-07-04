@@ -22,7 +22,7 @@ from torchvision import models, transforms
 DEVICE = "cpu"
 
 # Below this cosine similarity, the best match is reported as "Unknown".
-SIMILARITY_THRESHOLD = 0.75
+SIMILARITY_THRESHOLD = 0.70
 
 
 def _build_embedding_model() -> torch.nn.Module:
