@@ -257,6 +257,48 @@ def ai_page():
     return render_template("user/ai.html", result=result, device=device)
 
 
+@bp.route("/ai/latest")
+@auth.login_required
+def ai_latest():
+    """
+    Polled by the AI Recognition page's JS every few seconds to show what
+    the LIVE webcam stream (webcam_watcher.py) has been detecting — as
+    opposed to the one-off "Run Detection" upload test above it, which
+    only fires when the user manually submits an image.
+
+    Returns the most recent non-empty-frame events (same filtering as the
+    History page) so the live feed doesn't spam "no animal in frame"
+    every few seconds.
+    """
+    user = auth.current_user()
+    paths = auth.user_paths(user["id"])
+    events = _parse_events_log(paths["events_log"])
+
+    parsed = []
+    for event in events:
+        m = re.search(r"\[(.*?)\] (.*)", event)
+        if m:
+            timestamp, msg = m.groups()
+            if "no_animal_detected" in msg:
+                continue
+            if "Recognized" in msg:
+                kind = "feeding"
+                pet_name = _extract_pet_name(msg)
+            else:
+                kind = "unknown"
+                pet_name = None
+            parsed.append({
+                "timestamp": timestamp,
+                "message": msg,
+                "kind": kind,
+                "pet": pet_name,
+                "time": timestamp.split("T")[1][:8] if "T" in timestamp else "—",
+            })
+
+    parsed.sort(key=lambda e: e["timestamp"], reverse=True)
+    return {"events": parsed[:10]}
+
+
 # ============================================================================
 # 5. History — /user/history
 # ============================================================================
@@ -275,6 +317,13 @@ def history_page():
         m = re.search(r"\[(.*?)\] (.*)", event)
         if m:
             timestamp, msg = m.groups()
+            # History is for things worth reviewing later: a pet being fed,
+            # or an animal showing up that wasn't recognized. Empty-frame
+            # "no animal detected" events fire constantly (every detection
+            # cycle with nothing in view) and would drown out everything
+            # else, so they're deliberately excluded here.
+            if "no_animal_detected" in msg:
+                continue
             kind = "feeding" if "Recognized" in msg else "detection"
             parsed_events.append({"timestamp": timestamp, "message": msg, "kind": kind})
 

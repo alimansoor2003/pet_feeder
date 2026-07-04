@@ -1,5 +1,89 @@
 {% extends "user/_nav.html" %}
 {% block title %}My Pets — PawSense{% endblock %}
+{% block extra_head %}
+<style>
+  /* -- Upload dropzone -- */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    background: var(--bg);
+    transition: border-color var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
+    position: relative;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--brand);
+    background: var(--brand-light);
+  }
+  .dropzone input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    box-shadow: none;
+  }
+  .dropzone .dz-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .dropzone .dz-text { font-weight: 600; color: var(--ink); font-size: 0.92rem; }
+  .dropzone .dz-subtext { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.25rem; }
+  .dropzone-preview {
+    display: none;
+    margin-top: 1rem;
+  }
+  .dropzone-preview img {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: var(--clay-raised);
+  }
+
+  /* -- Pet gallery cards -- */
+  .pet-gallery-card {
+    background: var(--paper);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--clay-raised);
+    transition: transform var(--dur-base) var(--ease-clay), box-shadow var(--dur-base) var(--ease-out);
+  }
+  .pet-gallery-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--clay-raised-hover);
+  }
+  .pet-gallery-card .pet-photo {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+    background: var(--brand-light);
+  }
+  .pet-gallery-card .pet-body {
+    padding: 1.1rem 1.25rem 1.25rem;
+  }
+  .pet-gallery-card h3 {
+    margin: 0 0 0.6rem;
+    font-size: 1.15rem;
+    color: var(--navy);
+  }
+  .pet-info-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .pet-info-item {
+    text-align: center;
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 0.5rem 0.25rem;
+  }
+  .pet-info-item .val { font-weight: 700; color: var(--navy); font-size: 0.95rem; }
+  .pet-info-item .lbl { font-size: 0.68rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.4px; }
+  .pet-actions { display: flex; gap: 0.5rem; }
+  .pet-actions .btn, .pet-actions button { flex: 1; padding: 0.55rem; font-size: 0.85rem; }
+</style>
+{% endblock %}
 {% block page_content %}
 
 <div class="grid cols-2">
@@ -7,12 +91,22 @@
     <h2>Add a Pet</h2>
     <form method="post" enctype="multipart/form-data">
       <div class="form-group">
-        <label>Name *</label>
-        <input type="text" name="name" required>
+        <label>Photo *</label>
+        <div class="dropzone" id="dropzone">
+          <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png" required onchange="previewImage(event)">
+          <div id="dzPrompt">
+            <div class="dz-icon">📷</div>
+            <div class="dz-text">Click or drag a photo here</div>
+            <div class="dz-subtext">JPG or PNG</div>
+          </div>
+          <div class="dropzone-preview" id="dzPreview">
+            <img id="dzPreviewImg" src="" alt="Preview">
+          </div>
+        </div>
       </div>
       <div class="form-group">
-        <label>Photo *</label>
-        <input type="file" name="image" accept=".jpg,.jpeg,.png" required>
+        <label>Name *</label>
+        <input type="text" name="name" required>
       </div>
       <div class="form-group">
         <label>Type</label>
@@ -38,27 +132,78 @@
   </div>
 
   <div>
-    <h2>Registered Pets</h2>
+    <h2 style="margin-bottom: 1rem;">Registered Pets</h2>
     {% if pets %}
-      {% for name, info in pets.items() %}
-        <div class="card" style="display:flex; gap:1rem; align-items:center;">
-          <img src="/{{ info.image }}" alt="{{ name }}" style="width:70px; height:70px; object-fit:cover; border-radius:12px;" onerror="this.style.display='none'">
-          <div style="flex:1;">
-            <h3 style="margin:0 0 0.25rem;">{{ name }}</h3>
-            <p class="text-muted" style="margin:0; font-size:0.85rem;">{{ info.type }} · {{ info.age }}y · {{ info.weight }}kg · {{ info.feeding_amount }}g/meal</p>
+      <div class="grid cols-2">
+        {% for name, info in pets.items() %}
+          <div class="pet-gallery-card">
+            <img class="pet-photo" src="/{{ info.image }}" alt="{{ name }}"
+                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%23ffe9d9%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2255%22 font-size=%2240%22 text-anchor=%22middle%22%3E🐾%3C/text%3E%3C/svg%3E'">
+            <div class="pet-body">
+              <h3>{{ name }}</h3>
+              <div class="pet-info-row">
+                <div class="pet-info-item">
+                  <div class="val">{{ info.age or "—" }}</div>
+                  <div class="lbl">Age</div>
+                </div>
+                <div class="pet-info-item">
+                  <div class="val">{{ info.weight or "—" }}</div>
+                  <div class="lbl">Kg</div>
+                </div>
+                <div class="pet-info-item">
+                  <div class="val">{{ info.feeding_amount or "—" }}</div>
+                  <div class="lbl">g/meal</div>
+                </div>
+              </div>
+              <div class="pet-actions">
+                <a href="{{ url_for('user.edit_pet', name=name) }}" class="btn btn-outline">Edit</a>
+                <form method="post" action="{{ url_for('user.delete_pet', name=name) }}" onsubmit="return confirm('Remove {{ name }}?');" style="flex:1;">
+                  <button type="submit" class="danger btn-block">Remove</button>
+                </form>
+              </div>
+            </div>
           </div>
-          <div style="display:flex; gap:0.5rem;">
-            <a href="{{ url_for('user.edit_pet', name=name) }}" class="btn btn-outline" style="padding:0.5rem 1rem; font-size:0.85rem;">Edit</a>
-            <form method="post" action="{{ url_for('user.delete_pet', name=name) }}" onsubmit="return confirm('Remove {{ name }}?');">
-              <button type="submit" class="danger" style="padding:0.5rem 1rem; font-size:0.85rem;">Remove</button>
-            </form>
-          </div>
-        </div>
-      {% endfor %}
+        {% endfor %}
+      </div>
     {% else %}
       <div class="card empty-state"><p>No pets yet — add one using the form.</p></div>
     {% endif %}
   </div>
 </div>
+
+<script>
+  function previewImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('dzPreviewImg').src = e.target.result;
+      document.getElementById('dzPrompt').style.display = 'none';
+      document.getElementById('dzPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const dropzone = document.getElementById('dropzone');
+  ['dragenter', 'dragover'].forEach(evt => {
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+  });
+  ['dragleave', 'drop'].forEach(evt => {
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+    });
+  });
+  dropzone.addEventListener('drop', (e) => {
+    const input = document.getElementById('imageInput');
+    if (e.dataTransfer.files.length) {
+      input.files = e.dataTransfer.files;
+      previewImage({ target: input });
+    }
+  });
+</script>
 
 {% endblock %}

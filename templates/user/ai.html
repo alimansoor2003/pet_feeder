@@ -1,6 +1,61 @@
 {% extends "user/_nav.html" %}
 {% block title %}AI Recognition — PawSense{% endblock %}
+{% block extra_head %}
+<style>
+  .live-feed-item {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    background: var(--bg);
+    margin-bottom: 0.6rem;
+    animation: clay-slide-in var(--dur-slow) var(--ease-out) backwards;
+  }
+  .live-feed-item .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .live-feed-item.fed .icon { background: var(--sage-light); }
+  .live-feed-item.unknown .icon { background: #fff3d6; }
+  .live-feed-item .content { flex: 1; }
+  .live-feed-item .title { font-weight: 700; color: var(--navy); font-size: 0.92rem; }
+  .live-feed-item .time { font-size: 0.78rem; color: var(--ink-soft); }
+  #liveFeedEmpty { text-align: center; padding: 2rem 1rem; color: var(--ink-soft); }
+</style>
+{% endblock %}
 {% block page_content %}
+
+<div class="card">
+  <h2>Live Camera Monitor</h2>
+  <p class="text-muted" style="margin-bottom: 1rem;">
+    Live preview from your laptop webcam (temporary stand-in while the ESP32 camera is being replaced).
+    Requires <code>python webcam_watcher.py your-email@example.com</code> running on your computer.
+  </p>
+  <div id="liveFeedWrapper" style="border-radius: 12px; overflow: hidden; background: #000; max-width: 640px; min-height: 200px; display: flex; align-items: center; justify-content: center; box-shadow: var(--clay-raised);">
+    <img
+      id="liveFeed"
+      src="http://localhost:5001/video_feed"
+      alt="Live camera preview"
+      style="width: 100%; display: block;"
+      onerror="this.style.display='none'; document.getElementById('liveFeedOffline').style.display='block';"
+      onload="document.getElementById('liveFeedOffline').style.display='none';"
+    >
+    <div id="liveFeedOffline" style="display:none; color:#a8a89f; padding: 3rem; text-align:center;">
+      📷 Live preview offline — start <code>webcam_watcher.py</code> on your computer to see it here.
+    </div>
+  </div>
+
+  <h3 style="margin-top: 1.75rem; margin-bottom: 0.75rem; font-size: 1rem;">Live Detection Feed</h3>
+  <div id="liveFeedList"></div>
+  <div id="liveFeedEmpty">Waiting for the live camera to detect something...</div>
+</div>
 
 <div class="grid cols-2">
   <div class="card">
@@ -40,5 +95,49 @@
     {% endif %}
   </div>
 </div>
+
+<script>
+  async function refreshLiveFeed() {
+    try {
+      const res = await fetch("{{ url_for('user.ai_latest') }}");
+      const data = await res.json();
+      const list = document.getElementById('liveFeedList');
+      const empty = document.getElementById('liveFeedEmpty');
+
+      if (!data.events || data.events.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      list.innerHTML = data.events.map(function(e) {
+        if (e.kind === 'feeding') {
+          return '<div class="live-feed-item fed">' +
+            '<div class="icon">🐾</div>' +
+            '<div class="content">' +
+              '<div class="title">' + e.pet + ' recognized — fed</div>' +
+              '<div class="time">' + e.time + '</div>' +
+            '</div>' +
+            '<span class="badge success">✓ Fed</span>' +
+          '</div>';
+        }
+        return '<div class="live-feed-item unknown">' +
+          '<div class="icon">❓</div>' +
+          '<div class="content">' +
+            '<div class="title">Unrecognized animal detected</div>' +
+            '<div class="time">' + e.time + '</div>' +
+          '</div>' +
+          '<span class="badge warning">Unknown</span>' +
+        '</div>';
+      }).join('');
+    } catch (err) {
+      // Silently ignore — the page still works without the live feed.
+    }
+  }
+
+  refreshLiveFeed();
+  setInterval(refreshLiveFeed, 4000);
+</script>
 
 {% endblock %}
