@@ -4,72 +4,96 @@
   <meta charset="utf-8">
   <title>{% block title %}PawSense — Smart Pet Feeder{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    :root {
-      /* ---------- Brand palette: orange + navy + peach ---------- */
-      --brand: #f2762e;
-      --brand-dark: #d9601c;
-      --brand-light: #ffe9d9;
-      --navy: #1f2247;
-      --cream: #fff7ee;
 
-      /* Old variable names kept as aliases so every existing component
-         (cards, buttons, badges, stat-cards) repaints automatically —
-         nothing downstream needs to change. */
+  <!-- Brand typography: Space Grotesk (display) + Manrope (body) — matches
+       the landing page so the whole product feels like one brand. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       PawSense Design System v3 — "Lavender Suite"
+       --------------------------------------------------------------------------
+       Voice: soft lavender premium pet-tech, matching the landing page. Clay
+       materiality kept, violet as energy, deep purple-navy as anchor.
+       Display type: Space Grotesk. Body: Manrope.
+
+       Every token and class name from v1 is preserved — pages built against
+       the old system upgrade automatically.
+       ========================================================================== */
+
+    :root {
+      /* ---------- Core brand palette — "Lavender Suite", matches landing ---------- */
+      --brand:       #A855F7;   /* primary violet */
+      --brand-dark:  #8B5CF6;   /* hover / emphasis */
+      --brand-deep:  #7C3AED;   /* text-safe violet on lavender tint */
+      --brand-light: #EFE7FB;   /* lavender tint — chips, soft fills */
+      --navy:        #2A2153;   /* brand anchor — nav, headings, admin */
+      --navy-deep:   #201A44;   /* footer, darkest surfaces */
+      --cream:       #F7F3F8;   /* app background — soft lavender-cream */
+
+      /* ---------- Ink & surfaces ---------- */
+      --ink:       var(--navy);
+      --ink-soft:  #8B85A3;     /* secondary text — lavender gray, AA on bg */
+      --paper:     #ffffff;
+      --bg:        var(--cream);
+      --border:    #E8E2F2;
+      --radius:    18px;
+      --radius-sm: 12px;
+
+      /* ---------- Semantic ---------- */
+      --status-good: #278a51;
+      --warning:     #b97d14;
+      --danger:      #c24e4e;
+      --danger-dark: #a63d3d;
+
+      /* ---------- Legacy aliases (v1 names — keep every page working) ---------- */
       --sage: var(--brand);
       --sage-dark: var(--brand-dark);
       --sage-light: var(--brand-light);
-      --ink: var(--navy);
-      --ink-soft: #6b6258;
-      --paper: #ffffff;
-      --bg: var(--cream);
-      --border: #f0e3d5;
-      --shadow: 0 2px 10px rgba(0,0,0,0.06);
-      --shadow-lg: 0 16px 40px rgba(0,0,0,0.10);
-      --radius: 18px;
-      --status-good: #2f9e5c;
+      --shadow: 0 2px 10px rgba(28, 32, 68, 0.06);
+      --shadow-lg: 0 16px 40px rgba(28, 32, 68, 0.10);
+      --primary: var(--brand);
+      --primary-light: var(--brand);
+      --primary-dark: var(--brand-dark);
+      --success: var(--brand);
+      --text: var(--ink);
+      --text-light: var(--ink-soft);
+      --card: var(--paper);
 
-      /* ---------- Claymorphism tokens ----------
-         Clay shapes use a paired light+dark shadow to fake a soft
-         puffy extrusion, plus a subtle inset highlight on top.
-         Kept as variables so every clay surface stays consistent. */
+      /* ---------- Clay materiality ----------
+         Paired light+warm shadows fake a soft ceramic extrusion; an inset
+         top highlight suggests glaze. Tuned softer than v1 — the puffiness
+         should be felt, not seen. */
       --clay-light: #ffffff;
-      --clay-shadow-dark: rgba(242, 118, 46, 0.30);
-      --clay-shadow-soft: rgba(242, 118, 46, 0.15);
-      --clay-highlight: rgba(255, 255, 255, 0.6);
+      --clay-shadow-dark: rgba(109, 91, 208, 0.22);
+      --clay-shadow-soft: rgba(109, 91, 208, 0.12);
+      --clay-highlight: rgba(255, 255, 255, 0.65);
       --clay-raised:
-        -6px -6px 14px var(--clay-light),
-        8px 8px 18px var(--clay-shadow-soft),
+        -5px -5px 12px var(--clay-light),
+        7px 7px 16px var(--clay-shadow-soft),
         inset 0 1px 0 var(--clay-highlight);
       --clay-raised-hover:
-        -7px -7px 16px var(--clay-light),
-        10px 10px 22px var(--clay-shadow-dark),
+        -6px -6px 14px var(--clay-light),
+        9px 9px 20px var(--clay-shadow-dark),
         inset 0 1px 0 var(--clay-highlight);
       --clay-pressed:
         inset 3px 3px 8px var(--clay-shadow-soft),
         inset -2px -2px 6px var(--clay-light);
 
-      /* ---------- Motion tokens ---------- */
+      /* ---------- Type ---------- */
+      --font-display: "Space Grotesk", "Manrope", -apple-system, sans-serif;
+      --font-body: "Manrope", -apple-system, "Segoe UI", Roboto, sans-serif;
+
+      /* ---------- Motion ---------- */
       --ease-clay: cubic-bezier(0.34, 1.56, 0.64, 1);
       --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
       --dur-fast: 150ms;
       --dur-base: 280ms;
       --dur-slow: 450ms;
-
-      /* Aliases so older dashboard markup (written before the redesign)
-         keeps working without needing every inline style rewritten. */
-      --primary: var(--sage);
-      --primary-light: var(--sage);
-      --primary-dark: var(--sage-dark);
-      --success: var(--sage);
-      --warning: #d9a334;
-      --danger: #c25b5b;
-      --text: var(--ink);
-      --text-light: var(--ink-soft);
-      --card: var(--paper);
     }
 
-    /* Respect users who've asked for less motion */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.001ms !important;
@@ -81,24 +105,61 @@
 
     * { box-sizing: border-box; }
 
+    /* ---------- Base document ---------- */
+    html { scroll-behavior: smooth; }
+
     body {
       margin: 0;
-      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      font-family: var(--font-body);
+      font-size: 16px;
       background: var(--bg);
       color: var(--ink);
-      line-height: 1.6;
+      line-height: 1.65;
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* Brand-color text selection — small, but it's the kind of detail
+       people subconsciously read as "someone cared". */
+    ::selection { background: var(--brand); color: #fff; }
+
+    /* Quiet custom scrollbar (WebKit) */
+    ::-webkit-scrollbar { width: 12px; }
+    ::-webkit-scrollbar-track { background: var(--cream); }
+    ::-webkit-scrollbar-thumb {
+      background: #DCD3EC;
+      border-radius: 999px;
+      border: 3px solid var(--cream);
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--brand); }
+
+    /* Visible keyboard focus everywhere — accessibility is part of craft */
+    :focus-visible {
+      outline: 3px solid var(--brand);
+      outline-offset: 2px;
+      border-radius: 4px;
     }
 
     a { color: inherit; }
 
-    /* ---------- Top nav (marketing) ---------- */
+    /* ---------- Headings: Space Grotesk carries the brand voice ---------- */
+    h1, h2, h3, h4 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--navy);
+      line-height: 1.25;
+    }
+
+    /* ---------- Top nav ---------- */
     .topnav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1.25rem 3rem;
-      background: var(--paper);
+      padding: 1.1rem 3rem;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(12px) saturate(1.4);
+      -webkit-backdrop-filter: blur(12px) saturate(1.4);
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
@@ -106,9 +167,10 @@
     }
 
     .topnav .logo {
-      font-size: 1.3rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
       display: flex;
       align-items: center;
       gap: 0.4rem;
@@ -116,9 +178,7 @@
       transition: transform var(--dur-fast) ease;
     }
 
-    .topnav .logo:hover {
-      animation: clay-wiggle 0.5s var(--ease-out);
-    }
+    .topnav .logo:hover { animation: clay-wiggle 0.5s var(--ease-out); }
 
     @keyframes clay-wiggle {
       0%, 100% { transform: rotate(0deg); }
@@ -126,25 +186,21 @@
       75% { transform: rotate(4deg) scale(1.05); }
     }
 
-    .topnav nav {
-      display: flex;
-      gap: 2.25rem;
-      align-items: center;
-    }
+    .topnav nav { display: flex; gap: 2.1rem; align-items: center; }
 
     .topnav nav a {
       text-decoration: none;
-      font-weight: 500;
-      font-size: 0.95rem;
+      font-weight: 600;
+      font-size: 0.93rem;
       color: var(--ink-soft);
-      transition: color 0.15s;
+      transition: color var(--dur-fast) ease;
       position: relative;
       padding-bottom: 4px;
     }
 
     .topnav nav a:hover { color: var(--ink); }
 
-    .topnav nav a.active { color: var(--ink); font-weight: 600; }
+    .topnav nav a.active { color: var(--ink); font-weight: 700; }
     .topnav nav a.active::after {
       content: "";
       position: absolute;
@@ -157,40 +213,37 @@
       background: var(--brand);
     }
 
-    .topnav .actions {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-    }
+    .topnav .actions { display: flex; gap: 0.75rem; align-items: center; }
 
     /* ---------- Buttons ---------- */
     .btn {
       display: inline-block;
       padding: 0.7rem 1.5rem;
       border-radius: 999px;
-      font-weight: 600;
-      font-size: 0.95rem;
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 0.93rem;
+      letter-spacing: 0.01em;
       text-decoration: none;
       cursor: pointer;
       border: none;
       transition: transform var(--dur-base) var(--ease-clay),
                   box-shadow var(--dur-base) var(--ease-out),
-                  background-color var(--dur-fast) ease;
+                  background-color var(--dur-fast) ease,
+                  border-color var(--dur-fast) ease;
       will-change: transform;
     }
 
     .btn-primary {
-      background: var(--sage);
+      background: var(--brand);
       color: white;
       box-shadow: var(--clay-raised);
     }
-
     .btn-primary:hover {
-      background: var(--sage-dark);
+      background: var(--brand-dark);
       transform: translateY(-3px);
       box-shadow: var(--clay-raised-hover);
     }
-
     .btn-primary:active {
       transform: translateY(0) scale(0.97);
       box-shadow: var(--clay-pressed);
@@ -202,12 +255,10 @@
       color: var(--ink);
       border: 1.5px solid var(--border);
     }
-
     .btn-outline:hover {
-      border-color: var(--ink);
+      border-color: var(--navy);
       transform: translateY(-2px);
     }
-
     .btn-outline:active {
       transform: translateY(0) scale(0.97);
       transition-duration: var(--dur-fast);
@@ -215,20 +266,20 @@
 
     .btn-block { width: 100%; text-align: center; }
 
-    /* ---------- Page shell for app/dashboard pages ---------- */
+    /* ---------- App shell ---------- */
     main.app-shell {
       max-width: 1200px;
       margin: 0 auto;
       padding: 2rem 1.5rem;
     }
 
-    /* ---------- Cards (dashboard reuse) ---------- */
+    /* ---------- Cards ---------- */
     .card {
       background: var(--paper);
       border-radius: var(--radius);
       padding: 1.75rem;
       box-shadow: var(--clay-raised);
-      border: 1px solid rgba(242, 118, 46, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.08);
       margin-bottom: 1.5rem;
       transition: transform var(--dur-base) var(--ease-out),
                   box-shadow var(--dur-base) var(--ease-out);
@@ -245,26 +296,31 @@
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* Stagger card entrances slightly within a grid so they don't pop in unison */
-    .grid .card:nth-child(1) { animation-delay: 0ms; }
-    .grid .card:nth-child(2) { animation-delay: 60ms; }
-    .grid .card:nth-child(3) { animation-delay: 120ms; }
-    .grid .card:nth-child(4) { animation-delay: 180ms; }
+    /* Orchestrated entrance: cards arrive as a staggered sequence,
+       one soft beat apart — one deliberate moment, then calm. */
+    .grid .card:nth-child(1), .grid .stat-card:nth-child(1) { animation-delay: 0ms; }
+    .grid .card:nth-child(2), .grid .stat-card:nth-child(2) { animation-delay: 60ms; }
+    .grid .card:nth-child(3), .grid .stat-card:nth-child(3) { animation-delay: 120ms; }
+    .grid .card:nth-child(4), .grid .stat-card:nth-child(4) { animation-delay: 180ms; }
+    .grid .card:nth-child(5), .grid .stat-card:nth-child(5) { animation-delay: 240ms; }
+    .grid .card:nth-child(6), .grid .stat-card:nth-child(6) { animation-delay: 300ms; }
 
-    .card h1 { font-size: 1.4rem; margin: 0 0 0.75rem 0; }
-    .card h2 { font-size: 1.15rem; margin: 0 0 0.75rem 0; }
+    .card h1 { font-size: 1.45rem; margin: 0 0 0.75rem 0; }
+    .card h2 { font-size: 1.18rem; margin: 0 0 0.75rem 0; }
 
     .grid { display: grid; gap: 1.5rem; }
     .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
     .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
     .grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 
+    /* ---------- Stat cards: Space Grotesk numerals are the hero ---------- */
     .stat-card {
-      background: var(--sage-light);
+      background: var(--brand-light);
       border-radius: var(--radius);
       padding: 1.5rem;
       text-align: center;
       box-shadow: var(--clay-raised);
+      animation: clay-rise var(--dur-slow) var(--ease-out) backwards;
       transition: transform var(--dur-base) var(--ease-clay),
                   box-shadow var(--dur-base) var(--ease-out);
     }
@@ -272,16 +328,26 @@
       transform: translateY(-3px) scale(1.02);
       box-shadow: var(--clay-raised-hover);
     }
-    .stat-card .label { font-size: 0.85rem; color: var(--ink-soft); font-weight: 600; }
-    .stat-card .value {
-      font-size: 2rem;
+    .stat-card .label {
+      font-size: 0.78rem;
+      color: var(--brand-deep);
       font-weight: 800;
-      color: var(--sage-dark);
-      margin-top: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .stat-card .value {
+      font-family: var(--font-display);
+      font-size: 2.3rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--brand-deep);
+      margin-top: 0.35rem;
+      line-height: 1.1;
       transition: transform var(--dur-base) var(--ease-clay);
     }
-    .stat-card:hover .value { transform: scale(1.08); }
+    .stat-card:hover .value { transform: scale(1.06); }
 
+    /* ---------- Pet cards ---------- */
     .pet-card {
       border: none;
       border-radius: var(--radius);
@@ -306,68 +372,111 @@
       width: 100%;
       height: 130px;
       object-fit: cover;
-      border-radius: 12px;
+      border-radius: var(--radius-sm);
       margin-bottom: 0.75rem;
       transition: transform var(--dur-base) var(--ease-out);
     }
     .pet-card:hover img { transform: scale(1.04); }
-    .pet-card h3 { font-size: 1rem; margin: 0 0 0.4rem 0; }
+    .pet-card h3 { font-size: 1.05rem; margin: 0 0 0.4rem 0; }
     .pet-card p { font-size: 0.85rem; color: var(--ink-soft); margin: 0; }
 
+    /* ---------- Badges: status dot makes meaning readable without color ---------- */
     .badge {
-      display: inline-block;
-      padding: 0.3rem 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.8rem;
       border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 700;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
       animation: clay-pop var(--dur-base) var(--ease-clay) backwards;
     }
-    .badge.success { background: var(--sage-light); color: var(--sage-dark); }
-    .badge.danger { background: #fbe3e3; color: #9a3a3a; }
-    .badge.warning { background: #fff3d6; color: #8a6310; }
+    .badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+    .badge.success { background: #e2f3e9; color: var(--status-good); }
+    .badge.danger  { background: #fbe3e3; color: #9a3a3a; }
+    .badge.warning { background: #fdf0d4; color: #8a6310; }
 
     @keyframes clay-pop {
       from { opacity: 0; transform: scale(0.7); }
       to   { opacity: 1; transform: scale(1); }
     }
 
+    /* ---------- Tables ---------- */
     table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
-    th { text-align: left; padding: 0.85rem; font-size: 0.85rem; color: var(--ink-soft); border-bottom: 2px solid var(--border); }
-    td { padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--border); }
+    th {
+      text-align: left;
+      padding: 0.85rem;
+      font-size: 0.74rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--ink-soft);
+      border-bottom: 2px solid var(--border);
+    }
+    td {
+      padding: 0.8rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+      font-variant-numeric: tabular-nums;
+    }
+    tbody tr { transition: background-color var(--dur-fast) ease; }
+    tbody tr:hover { background: var(--cream); }
 
-    .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--ink-soft); }
+    /* ---------- Empty states: quiet paw watermark, the brand's signature ---------- */
+    .empty-state {
+      text-align: center;
+      padding: 2.75rem 1rem;
+      color: var(--ink-soft);
+      position: relative;
+    }
+    .empty-state::before {
+      content: "";
+      display: block;
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 0.75rem;
+      opacity: 0.35;
+      background-color: var(--brand);
+      -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg>') center / contain no-repeat;
+      mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg>') center / contain no-repeat;
+    }
 
-    /* ---------- Scroll reveal (landing page sections) ---------- */
+    /* ---------- Scroll reveal ---------- */
     .reveal-init {
       opacity: 0;
       transform: translateY(24px);
       transition: opacity var(--dur-slow) var(--ease-out),
                   transform var(--dur-slow) var(--ease-out);
     }
-    .reveal-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .reveal-visible { opacity: 1; transform: translateY(0); }
 
-    /* ---------- <button> elements (some templates use <button> not <a class="btn">) ---------- */
+    /* ---------- Raw <button> elements ---------- */
     button {
       display: inline-block;
       padding: 0.7rem 1.5rem;
       border-radius: 999px;
-      font-weight: 600;
-      font-size: 0.95rem;
+      font-weight: 700;
+      font-size: 0.93rem;
+      letter-spacing: 0.01em;
       cursor: pointer;
       border: none;
-      background: var(--sage);
+      background: var(--brand);
       color: white;
-      font-family: inherit;
+      font-family: var(--font-body);
       box-shadow: var(--clay-raised);
       transition: transform var(--dur-base) var(--ease-clay),
                   box-shadow var(--dur-base) var(--ease-out),
                   background-color var(--dur-fast) ease;
     }
     button:hover {
-      background: var(--sage-dark);
+      background: var(--brand-dark);
       transform: translateY(-3px);
       box-shadow: var(--clay-raised-hover);
     }
@@ -377,55 +486,88 @@
       transition-duration: var(--dur-fast);
     }
     button.secondary { background: var(--border); color: var(--ink); }
-    button.secondary:hover { background: #d8d6cf; }
-    button.success { background: var(--sage); }
-    button.success:hover { background: var(--sage-dark); }
-    button.danger { background: #c25b5b; }
-    button.danger:hover { background: #a84747; }
+    button.secondary:hover { background: #DCD3EC; }
+    button.success { background: var(--brand); }
+    button.success:hover { background: var(--brand-dark); }
+    button.danger { background: var(--danger); }
+    button.danger:hover { background: var(--danger-dark); }
 
     .text-muted { color: var(--ink-soft); }
 
-    /* ---------- Timeline (pet profile feeding history) ---------- */
+    /* ---------- Timeline ---------- */
     .timeline { position: relative; padding-left: 1.75rem; }
-    .timeline-item { position: relative; padding-bottom: 1.5rem; border-left: 2px solid var(--border); padding-left: 1.25rem; margin-left: 0.1rem; }
+    .timeline-item {
+      position: relative;
+      padding-bottom: 1.5rem;
+      border-left: 2px solid var(--border);
+      padding-left: 1.25rem;
+      margin-left: 0.1rem;
+    }
     .timeline-item:last-child { border-left-color: transparent; }
-    .timeline-dot { position: absolute; left: -6px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--sage); }
-    .timeline-time { font-size: 0.82rem; color: var(--ink-soft); font-weight: 600; }
+    .timeline-dot {
+      position: absolute;
+      left: -6px;
+      top: 2px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--brand);
+      box-shadow: 0 0 0 3px var(--brand-light);
+    }
+    .timeline-time { font-size: 0.82rem; color: var(--ink-soft); font-weight: 700; }
     .timeline-content { margin-top: 0.25rem; }
 
-    input[type=text], input[type=email], input[type=password], input[type=file] {
+    /* ---------- Forms ---------- */
+    input[type=text], input[type=email], input[type=password],
+    input[type=number], input[type=file], input[type=time], select, textarea {
       width: 100%;
       padding: 0.75rem 1rem;
       border: 1.5px solid var(--border);
       border-radius: 10px;
       font-size: 0.95rem;
-      font-family: inherit;
+      font-family: var(--font-body);
+      color: var(--ink);
       background: var(--bg);
-      box-shadow: inset 2px 2px 6px rgba(242, 118, 46, 0.10),
+      box-shadow: inset 2px 2px 6px rgba(109, 91, 208, 0.08),
                   inset -2px -2px 6px var(--clay-light);
       transition: box-shadow var(--dur-base) var(--ease-out),
                   border-color var(--dur-fast) ease;
     }
-    input:focus {
+    input:focus, select:focus, textarea:focus {
       outline: none;
-      border-color: var(--sage);
-      box-shadow: inset 2px 2px 6px rgba(242, 118, 46, 0.10),
+      border-color: var(--brand);
+      box-shadow: inset 2px 2px 6px rgba(109, 91, 208, 0.08),
                   inset -2px -2px 6px var(--clay-light),
-                  0 0 0 4px var(--sage-light);
+                  0 0 0 4px var(--brand-light);
     }
-    label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.9rem; }
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      font-size: 0.88rem;
+    }
     .form-group { margin-bottom: 1.25rem; }
 
+    /* ---------- Flash messages: accent bar carries the state ---------- */
     .flash {
       padding: 0.9rem 1.25rem;
-      border-radius: 12px;
+      border-radius: var(--radius-sm);
       margin-bottom: 1.25rem;
-      font-weight: 500;
+      font-weight: 600;
+      border-left: 4px solid transparent;
       box-shadow: var(--clay-raised);
       animation: clay-slide-in var(--dur-slow) var(--ease-out) backwards;
     }
-    .flash.success { background: var(--sage-light); color: var(--sage-dark); }
-    .flash.error { background: #fbe3e3; color: #9a3a3a; }
+    .flash.success {
+      background: #e9f5ee;
+      color: #1e6b3e;
+      border-left-color: var(--status-good);
+    }
+    .flash.error {
+      background: #fbe3e3;
+      color: #9a3a3a;
+      border-left-color: var(--danger);
+    }
 
     @keyframes clay-slide-in {
       from { opacity: 0; transform: translateY(-10px); }
@@ -434,20 +576,22 @@
 
     /* ---------- Footer ---------- */
     footer {
-      background: var(--ink);
-      color: #cfcfc9;
+      background: var(--navy-deep);
+      color: #c9cbdd;
       padding: 3rem 3rem 2rem;
       margin-top: 4rem;
       font-size: 0.9rem;
     }
-    footer a { color: #cfcfc9; text-decoration: none; }
+    footer a { color: #c9cbdd; text-decoration: none; transition: color var(--dur-fast) ease; }
     footer a:hover { color: white; }
 
+    /* ---------- Responsive ---------- */
     @media (max-width: 768px) {
       .topnav { padding: 1rem 1.25rem; flex-wrap: wrap; gap: 0.75rem; }
-      .topnav nav { gap: 1.25rem; flex-wrap: wrap; }
+      .topnav nav { gap: 1.1rem; flex-wrap: wrap; }
       main.app-shell { padding: 1.25rem 0.85rem; }
       .grid.cols-2, .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; }
+      .card { padding: 1.35rem; }
     }
   </style>
   {% block extra_head %}{% endblock %}
@@ -490,28 +634,27 @@
   <footer>
     <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2rem;">
       <div>
-        <div style="font-weight: 800; font-size: 1.1rem; color: white; margin-bottom: 0.5rem;">🐾 PawSense</div>
-        <p style="max-width: 280px; color: #a8a89f;">Smart feeding, powered by computer vision — so every pet gets fed by the right bowl, every time.</p>
+        <div style="font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; color: white; margin-bottom: 0.5rem;">🐾 PawSense</div>
+        <p style="max-width: 280px; color: #9599b3;">Smart feeding, powered by computer vision — so every pet gets fed by the right bowl, every time.</p>
       </div>
       <div>
-        <div style="color: white; font-weight: 600; margin-bottom: 0.75rem;">Product</div>
+        <div style="color: white; font-weight: 700; margin-bottom: 0.75rem;">Product</div>
         <p><a href="{{ url_for('landing') }}#products">Smart Feeder</a></p>
         <p><a href="{{ url_for('landing') }}#how-it-works">How It Works</a></p>
       </div>
       <div>
-        <div style="color: white; font-weight: 600; margin-bottom: 0.75rem;">Account</div>
+        <div style="color: white; font-weight: 700; margin-bottom: 0.75rem;">Account</div>
         <p><a href="{{ url_for('auth.signup') }}">Sign Up</a></p>
         <p><a href="{{ url_for('auth.login') }}">Log In</a></p>
       </div>
     </div>
-    <p style="text-align:center; margin-top: 2.5rem; color: #7d7d74;">© 2026 PawSense. All rights reserved.</p>
+    <p style="text-align:center; margin-top: 2.5rem; color: #6f7391;">© 2026 PawSense. All rights reserved.</p>
   </footer>
   {% endblock %}
 
   <script>
-    // Lightweight scroll-reveal: fades+lifts sections into view once,
-    // using IntersectionObserver so there's no scroll-event listener
-    // running continuously (cheap on battery/CPU).
+    // Lightweight scroll-reveal via IntersectionObserver — no continuous
+    // scroll listener, cheap on battery/CPU.
     document.addEventListener('DOMContentLoaded', function () {
       var targets = document.querySelectorAll('section, .reveal-on-scroll');
       if (!('IntersectionObserver' in window) || targets.length === 0) return;

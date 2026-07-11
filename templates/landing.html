@@ -1,260 +1,1069 @@
 {% extends "base.html" %}
-{% block title %}PawSense — Smart Pet Feeder powered by AI{% endblock %}
+{% block title %}PawSense — AI That Knows Your Pet{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   PawSense Landing — "Lavender Suite" theme
+   Same layout, structure and animations — colors, gradients and shadows
+   re-skinned to a soft lavender / violet / deep-purple palette.
+   Scoped to .lp / .lpnav / .lpfoot.
+   ============================================================================ */
+.lp, .lpnav, .lpfoot {
+  --lp-bg: #F7F3F2;
+  --lp-bg-2: #F1ECF7;
+  --lp-card: #FFFFFF;
+  --lp-card-2: #F5F1FB;
+  --lp-navy: #201A44;
+  --lp-line: rgba(46, 31, 94, 0.10);
+  --lp-line-soft: #E8E2F2;
+  --lp-ink: #2A2153;
+  --lp-ink-2: #8B85A3;
+  --lp-primary: #A855F7;
+  --lp-cyan: #7C6CF6;
+  --lp-green: #6D5BD0;
+  --lp-grad: linear-gradient(135deg, #C084FC 0%, #8B5CF6 100%);
+  --lp-grad-2: linear-gradient(135deg, #D8B4FE 0%, #A855F7 50%, #7C6CF6 100%);
+  --lp-shadow-soft: 0 10px 30px rgba(42, 33, 83, 0.08);
+  --lp-font-d: "Space Grotesk", "Manrope", sans-serif;
+  --lp-font-b: "Manrope", -apple-system, sans-serif;
+  font-family: var(--lp-font-b);
+  color: var(--lp-ink);
+}
+body:has(.lp) { background: linear-gradient(165deg, #F8F4F1 0%, #F2EDF6 50%, #E9E5F5 100%); }
+html { scroll-behavior: smooth; }
+
+/* ---------- Nav ---------- */
+.lpnav {
+  position: sticky; top: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.95rem 3rem;
+  background: rgba(248, 244, 243, 0.82);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom: 1px solid var(--lp-line-soft);
+}
+.lpnav .lp-logo {
+  font-family: var(--lp-font-d); font-weight: 700; font-size: 1.25rem;
+  letter-spacing: -0.02em; text-decoration: none; color: var(--lp-ink);
+  display: flex; align-items: center; gap: 0.55rem;
+}
+.lpnav .lp-logo .lp-mark {
+  width: 30px; height: 30px; border-radius: 9px; background: var(--lp-grad);
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.40);
+}
+.lpnav nav { display: flex; gap: 2rem; }
+.lpnav nav a {
+  color: var(--lp-ink-2); text-decoration: none; font-weight: 600; font-size: 0.9rem;
+  transition: color 180ms ease;
+}
+.lpnav nav a:hover { color: var(--lp-primary); }
+.lpnav .lp-acts { display: flex; gap: 0.7rem; align-items: center; }
+
+/* ---------- Buttons ---------- */
+.lp-btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.78rem 1.7rem; border-radius: 999px; border: 0; cursor: pointer;
+  font-family: var(--lp-font-b); font-weight: 700; font-size: 0.95rem;
+  text-decoration: none; position: relative; overflow: hidden;
+  transition: transform 240ms cubic-bezier(0.16,1,0.3,1), box-shadow 240ms ease, background-color 180ms ease, border-color 180ms ease;
+  will-change: transform;
+}
+.lp-btn-primary {
+  background: var(--lp-grad); color: #fff;
+  box-shadow: 0 10px 26px rgba(139, 92, 246, 0.38), inset 0 1px 0 rgba(255,255,255,0.35);
+  background-size: 160% 160%; background-position: 0% 50%;
+}
+.lp-btn-primary:hover {
+  transform: translateY(-3px);
+  background-position: 100% 50%;
+  box-shadow: 0 16px 36px rgba(168, 85, 247, 0.45), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.lp-btn-primary:active { transform: translateY(0) scale(0.97); }
+.lp-btn-ghost {
+  background: #FFFFFF; color: var(--lp-ink);
+  border: 1.5px solid var(--lp-line-soft);
+  box-shadow: 0 4px 14px rgba(42, 33, 83, 0.06);
+}
+.lp-btn-ghost:hover { transform: translateY(-2px); border-color: var(--lp-primary); background: var(--lp-bg-2); }
+.lp-btn-ghost:active { transform: translateY(0) scale(0.97); }
+
+/* ---------- Ambient background ---------- */
+.lp-bgfx { position: fixed; inset: 0; z-index: -2; overflow: hidden; background: transparent; }
+.lp-blob {
+  position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.55;
+  will-change: transform;
+  animation: lp-drift 26s ease-in-out infinite alternate;
+}
+.lp-blob.b1 { width: 620px; height: 620px; top: -220px; left: -160px; background: radial-gradient(circle, rgba(216,180,254,0.55), transparent 65%); }
+.lp-blob.b2 { width: 540px; height: 540px; top: 30%; right: -200px; background: radial-gradient(circle, rgba(124,108,246,0.28), transparent 65%); animation-delay: -8s; }
+.lp-blob.b3 { width: 480px; height: 480px; bottom: -180px; left: 28%; background: radial-gradient(circle, rgba(244,182,226,0.35), transparent 65%); animation-delay: -16s; }
+@keyframes lp-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(60px, 40px) scale(1.12); }
+}
+.lp-stars, .lp-stars::after {
+  content: ""; position: absolute; inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 12% 22%, rgba(139,92,246,0.30), transparent),
+    radial-gradient(1.5px 1.5px at 32% 68%, rgba(168,85,247,0.28), transparent),
+    radial-gradient(2px 2px at 54% 14%, rgba(124,108,246,0.30), transparent),
+    radial-gradient(1.5px 1.5px at 71% 42%, rgba(216,180,254,0.45), transparent),
+    radial-gradient(2px 2px at 86% 76%, rgba(139,92,246,0.25), transparent),
+    radial-gradient(1.5px 1.5px at 44% 88%, rgba(216,180,254,0.40), transparent),
+    radial-gradient(1.5px 1.5px at 92% 12%, rgba(168,85,247,0.28), transparent),
+    radial-gradient(1.5px 1.5px at 6% 58%, rgba(216,180,254,0.35), transparent);
+  animation: lp-twinkle 6s ease-in-out infinite alternate;
+}
+.lp-stars::after { transform: translate(28px, 40px) scale(1.15); animation-delay: -3s; opacity: 0.6; }
+@keyframes lp-twinkle { from { opacity: 0.45; } to { opacity: 1; } }
+.lp-cursor {
+  position: fixed; width: 480px; height: 480px; border-radius: 50%;
+  pointer-events: none; z-index: -1; left: 0; top: 0;
+  background: radial-gradient(circle, rgba(139,92,246,0.10), transparent 60%);
+  transform: translate(-50%, -50%); opacity: 0; transition: opacity 400ms ease;
+}
+
+/* ---------- Layout ---------- */
+.lp section { padding: 6rem 3rem; position: relative; }
+.lp .lp-wrap { max-width: 1160px; margin: 0 auto; position: relative; }
+.lp .lp-eyebrow {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.35rem 0.9rem; border-radius: 999px;
+  border: 1px solid rgba(139,92,246,0.30); background: rgba(216,180,254,0.18);
+  color: #7C3AED; font-weight: 700; font-size: 0.78rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.lp h2 {
+  font-family: var(--lp-font-d); font-size: clamp(1.9rem, 4vw, 2.7rem);
+  font-weight: 700; letter-spacing: -0.02em; line-height: 1.15;
+  margin: 1.1rem 0 0.9rem; color: var(--lp-ink);
+}
+.lp .lp-sub { color: var(--lp-ink-2); font-size: 1.05rem; max-width: 620px; line-height: 1.7; margin: 0; }
+.lp .lp-center { text-align: center; }
+.lp .lp-center .lp-sub { margin: 0 auto; }
+.lp-gradtext {
+  background: linear-gradient(135deg, #A855F7 0%, #8B5CF6 55%, #6D5BD0 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* ---------- Reveal cooperation with base scroll script ---------- */
+section.lp-s.reveal-init { opacity: 0; transform: translateY(34px); filter: blur(6px); transition: opacity 700ms cubic-bezier(0.16,1,0.3,1), transform 700ms cubic-bezier(0.16,1,0.3,1), filter 700ms ease; }
+section.lp-s.reveal-visible { opacity: 1; transform: none; filter: blur(0); }
+.lp [data-s] { opacity: 0; transform: translateY(22px); transition: opacity 600ms cubic-bezier(0.16,1,0.3,1), transform 600ms cubic-bezier(0.16,1,0.3,1); }
+section.lp-s.reveal-visible [data-s] { opacity: 1; transform: none; }
+section.lp-s.reveal-visible [data-s="1"] { transition-delay: 80ms; }
+section.lp-s.reveal-visible [data-s="2"] { transition-delay: 160ms; }
+section.lp-s.reveal-visible [data-s="3"] { transition-delay: 240ms; }
+section.lp-s.reveal-visible [data-s="4"] { transition-delay: 320ms; }
+section.lp-s.reveal-visible [data-s="5"] { transition-delay: 400ms; }
+section.lp-s.reveal-visible [data-s="6"] { transition-delay: 480ms; }
+section.lp-s.reveal-visible [data-s="7"] { transition-delay: 560ms; }
+section.lp-s.reveal-visible [data-s="8"] { transition-delay: 640ms; }
+
+/* ---------- HERO ---------- */
+.lp-hero { padding-top: 5rem !important; min-height: 88vh; display: flex; align-items: center; }
+.lp-hero .lp-wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 4rem; align-items: center; }
+.lp-hero h1 {
+  font-family: var(--lp-font-d);
+  font-size: clamp(2.6rem, 5.6vw, 4.1rem);
+  line-height: 1.06; letter-spacing: -0.03em; font-weight: 700;
+  margin: 1.3rem 0 1.4rem; color: var(--lp-ink);
+}
+.lp-hero .lp-lede { font-size: 1.13rem; color: var(--lp-ink-2); max-width: 480px; line-height: 1.75; margin: 0 0 2.2rem; }
+.lp-hero .lp-ctas { display: flex; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 2rem; }
+.lp-trust { display: flex; gap: 1.6rem; flex-wrap: wrap; color: var(--lp-ink-2); font-size: 0.86rem; font-weight: 600; }
+.lp-trust span { display: inline-flex; align-items: center; gap: 0.45rem; }
+.lp-trust svg { color: var(--lp-primary); }
+
+/* Camera scene */
+.lp-scene { position: relative; min-height: 480px; display: flex; align-items: center; justify-content: center; }
+.lp-cam {
+  position: relative; width: min(400px, 100%); aspect-ratio: 4/4.4;
+  border-radius: 26px; padding: 1.2rem;
+  background: linear-gradient(160deg, #FFFFFF, #F6F2FB);
+  border: 1px solid var(--lp-line-soft);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 30px 70px rgba(42, 33, 83, 0.16), 0 8px 24px rgba(139, 92, 246, 0.12), inset 0 1px 0 rgba(255,255,255,0.9);
+  animation: lp-float 7s ease-in-out infinite;
+}
+@keyframes lp-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+.lp-cam-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.9rem; }
+.lp-rec { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; color: var(--lp-ink-2); }
+.lp-rec i { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: lp-blinkdot 1.6s ease-in-out infinite; }
+@keyframes lp-blinkdot { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+.lp-view {
+  position: relative; border-radius: 18px; overflow: hidden;
+  background: radial-gradient(120% 100% at 50% 0%, #352B63 0%, #241E4A 60%, #1B1638 100%);
+  border: 1px solid rgba(139,92,246,0.18);
+  height: 72%;
+}
+.lp-corner { position: absolute; width: 22px; height: 22px; border: 2px solid rgba(192,132,252,0.85); }
+.lp-corner.tl { top: 10px; left: 10px; border-right: 0; border-bottom: 0; border-radius: 6px 0 0 0; }
+.lp-corner.tr { top: 10px; right: 10px; border-left: 0; border-bottom: 0; border-radius: 0 6px 0 0; }
+.lp-corner.bl { bottom: 10px; left: 10px; border-right: 0; border-top: 0; border-radius: 0 0 0 6px; }
+.lp-corner.br { bottom: 10px; right: 10px; border-left: 0; border-top: 0; border-radius: 0 0 6px 0; }
+.lp-scan {
+  position: absolute; left: 0; right: 0; height: 84px; top: -90px;
+  background: linear-gradient(to bottom, transparent, rgba(192,132,252,0.16), rgba(168,85,247,0.30));
+  border-bottom: 2px solid rgba(192,132,252,0.85);
+  animation: lp-scan 3.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes lp-scan { 0% { top: -90px; } 55% { top: 100%; } 100% { top: 100%; } }
+
+/* CSS cat */
+.lp-cat { position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%); width: 150px; animation: lp-breathe 4.5s ease-in-out infinite; transform-origin: bottom center; }
+@keyframes lp-breathe { 0%,100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.025); } }
+.lp-cat .head { position: relative; width: 120px; height: 104px; margin: 0 auto; background: linear-gradient(160deg, #55497E, #3B3260); border-radius: 48% 48% 46% 46%; box-shadow: inset 0 -10px 22px rgba(20, 15, 45, 0.40); }
+.lp-cat .ear { position: absolute; top: -17px; width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 32px solid #473C6E; }
+.lp-cat .ear.l { left: 6px; transform: rotate(-14deg); animation: lp-earl 6s ease-in-out infinite; }
+.lp-cat .ear.r { right: 6px; transform: rotate(14deg); animation: lp-earr 6s ease-in-out infinite; }
+@keyframes lp-earl { 0%,88%,100% { transform: rotate(-14deg); } 92% { transform: rotate(-26deg); } 96% { transform: rotate(-10deg); } }
+@keyframes lp-earr { 0%,80%,100% { transform: rotate(14deg); } 84% { transform: rotate(26deg); } 88% { transform: rotate(10deg); } }
+.lp-cat .eye { position: absolute; top: 42px; width: 18px; height: 20px; background: radial-gradient(circle at 50% 42%, #E9D5FF 0%, #C084FC 45%, #7C3AED 100%); border-radius: 50%; box-shadow: 0 0 12px rgba(192,132,252,0.7); animation: lp-blink 5s ease-in-out infinite; }
+.lp-cat .eye.l { left: 26px; } .lp-cat .eye.r { right: 26px; }
+.lp-cat .eye::after { content: ""; position: absolute; left: 50%; top: 24%; width: 4px; height: 11px; transform: translateX(-50%); background: #1B1638; border-radius: 50%; }
+@keyframes lp-blink { 0%, 46%, 54%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.08); } }
+.lp-cat .nose { position: absolute; left: 50%; top: 66px; transform: translateX(-50%); width: 12px; height: 8px; background: #F0ABFC; border-radius: 40% 40% 60% 60%; }
+.lp-cat .whisk { position: absolute; top: 68px; width: 34px; height: 1.5px; background: rgba(233,213,255,0.40); }
+.lp-cat .whisk.w1 { left: -22px; transform: rotate(8deg); } .lp-cat .whisk.w2 { left: -24px; top: 76px; transform: rotate(-4deg); }
+.lp-cat .whisk.w3 { right: -22px; transform: rotate(-8deg); } .lp-cat .whisk.w4 { right: -24px; top: 76px; transform: rotate(4deg); }
+.lp-cat .tail { position: absolute; right: -34px; bottom: 4px; width: 46px; height: 46px; border: 9px solid #473C6E; border-left-color: transparent; border-top-color: transparent; border-radius: 50%; transform: rotate(12deg); animation: lp-tail 3.2s ease-in-out infinite; transform-origin: 10% 90%; }
+@keyframes lp-tail { 0%,100% { transform: rotate(6deg); } 50% { transform: rotate(30deg); } }
+
+.lp-toast {
+  position: absolute; left: 50%; bottom: -21px; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 0.55rem; white-space: nowrap;
+  background: #FFFFFF; border: 1px solid rgba(139,92,246,0.45);
+  border-radius: 999px; padding: 0.55rem 1.1rem; font-size: 0.82rem; font-weight: 700;
+  color: var(--lp-ink);
+  box-shadow: 0 14px 34px rgba(42,33,83,0.16), 0 4px 14px rgba(139,92,246,0.18);
+  animation: lp-toastin 6.8s ease-in-out infinite;
+}
+.lp-toast .ok { width: 18px; height: 18px; border-radius: 50%; background: var(--lp-navy); display: inline-flex; align-items: center; justify-content: center; }
+.lp-toast .conf { color: #7C3AED; font-variant-numeric: tabular-nums; }
+@keyframes lp-toastin {
+  0%, 8% { opacity: 0; transform: translateX(-50%) translateY(14px) scale(0.92); }
+  16%, 92% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-6px) scale(0.96); }
+}
+.lp-chip {
+  position: absolute; display: inline-flex; align-items: center; gap: 0.5rem;
+  background: #FFFFFF; border: 1px solid var(--lp-line-soft);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  padding: 0.55rem 0.95rem; border-radius: 14px; font-size: 0.8rem; font-weight: 700;
+  color: var(--lp-ink);
+  box-shadow: 0 14px 30px rgba(42,33,83,0.14);
+  animation: lp-float 6s ease-in-out infinite;
+}
+.lp-chip svg { color: var(--lp-primary); }
+.lp-chip.c1 { top: 4%; left: -8%; animation-delay: -1.2s; }
+.lp-chip.c2 { top: 30%; right: -11%; animation-delay: -2.6s; }
+.lp-chip.c3 { bottom: 16%; left: -12%; animation-delay: -3.8s; }
+.lp-kibble { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #D8B4FE, #8B5CF6); opacity: 0.9; animation: lp-kib 5.4s ease-in-out infinite; }
+.lp-kibble.k1 { top: 12%; right: 6%; animation-delay: 0s; }
+.lp-kibble.k2 { top: 60%; left: 2%; animation-delay: -1.7s; width: 7px; height: 7px; }
+.lp-kibble.k3 { bottom: 4%; right: 16%; animation-delay: -3.1s; }
+@keyframes lp-kib { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(160deg); } }
+.lp-pawtrail { position: absolute; color: rgba(124, 108, 246, 0.25); animation: lp-pawpop 9s ease-in-out infinite; }
+.lp-pawtrail.p1 { top: 8%; left: 6%; animation-delay: 0s; }
+.lp-pawtrail.p2 { top: 22%; left: 13%; animation-delay: 1.4s; }
+.lp-pawtrail.p3 { top: 38%; left: 5%; animation-delay: 2.8s; }
+@keyframes lp-pawpop { 0%, 10% { opacity: 0; transform: scale(0.6); } 18%, 60% { opacity: 1; transform: scale(1); } 75%, 100% { opacity: 0; transform: scale(0.9); } }
+
+/* ---------- Pipeline ---------- */
+.lp-pipe { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: 3.2rem; position: relative; }
+.lp-pipe::before {
+  content: ""; position: absolute; top: 44px; left: 9%; right: 9%; height: 2px;
+  background: repeating-linear-gradient(90deg, rgba(139,92,246,0.8) 0 14px, transparent 14px 26px);
+  animation: lp-dash 1.4s linear infinite; opacity: 0.75;
+}
+@keyframes lp-dash { from { background-position-x: 0; } to { background-position-x: 26px; } }
+.lp-node { text-align: center; padding: 0 0.8rem; position: relative; }
+.lp-node .ic {
+  width: 88px; height: 88px; margin: 0 auto 1.1rem; border-radius: 24px;
+  background: #FFFFFF;
+  border: 1px solid var(--lp-line-soft);
+  display: flex; align-items: center; justify-content: center; position: relative; z-index: 1;
+  box-shadow: var(--lp-shadow-soft);
+  transition: transform 260ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 260ms ease, border-color 260ms ease;
+}
+.lp-node:hover .ic { transform: translateY(-6px) scale(1.05); border-color: rgba(168,85,247,0.45); box-shadow: 0 18px 40px rgba(42,33,83,0.14), 0 6px 20px rgba(168,85,247,0.20); }
+.lp-node .ic svg { color: var(--lp-primary); }
+.lp-node h3 { font-family: var(--lp-font-d); font-size: 1rem; margin: 0 0 0.3rem; color: var(--lp-ink); }
+.lp-node p { font-size: 0.82rem; color: var(--lp-ink-2); margin: 0; line-height: 1.55; }
+
+/* ---------- Features ---------- */
+.lp-feats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; margin-top: 3rem; }
+.lp-feat {
+  position: relative; border-radius: 20px; padding: 1.5rem 1.35rem;
+  background: linear-gradient(#FFFFFF, #FFFFFF) padding-box,
+              linear-gradient(135deg, #E8E2F2, #F3EEFA) border-box;
+  border: 1.5px solid transparent;
+  box-shadow: 0 6px 20px rgba(42, 33, 83, 0.05);
+  transition: transform 280ms cubic-bezier(0.16,1,0.3,1), box-shadow 280ms ease, background 280ms ease;
+  transform-style: preserve-3d; will-change: transform;
+}
+.lp-feat:hover {
+  background: linear-gradient(#FBF9FE, #FBF9FE) padding-box,
+              var(--lp-grad) border-box;
+  box-shadow: 0 20px 44px rgba(42,33,83,0.14), 0 8px 24px rgba(168,85,247,0.16);
+}
+.lp-feat .ic {
+  width: 46px; height: 46px; border-radius: 13px; margin-bottom: 1rem;
+  background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.28);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 400ms cubic-bezier(0.34,1.56,0.64,1);
+}
+.lp-feat:hover .ic { transform: rotate(-8deg) scale(1.08); }
+.lp-feat .ic svg { color: #8B5CF6; }
+.lp-feat h3 { font-family: var(--lp-font-d); font-size: 1.02rem; margin: 0 0 0.4rem; color: var(--lp-ink); }
+.lp-feat p { font-size: 0.85rem; color: var(--lp-ink-2); margin: 0; line-height: 1.6; }
+
+/* ---------- Showcase ---------- */
+.lp-show .lp-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+.lp-orbitbox { position: relative; height: 460px; display: flex; align-items: center; justify-content: center; }
+.lp-ring { position: absolute; border: 1.5px dashed rgba(139, 92, 246, 0.30); border-radius: 50%; }
+.lp-ring.r1 { width: 320px; height: 320px; animation: lp-rot 30s linear infinite; }
+.lp-ring.r2 { width: 440px; height: 440px; animation: lp-rot 46s linear infinite reverse; }
+@keyframes lp-rot { to { transform: rotate(360deg); } }
+.lp-orb {
+  position: absolute; width: 52px; height: 52px; border-radius: 16px;
+  background: #FFFFFF; border: 1px solid var(--lp-line-soft);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 10px 24px rgba(42,33,83,0.14);
+}
+.lp-orb svg { color: var(--lp-primary); }
+.lp-ring.r1 .lp-orb { animation: lp-rot 30s linear infinite reverse; }
+.lp-ring.r2 .lp-orb { animation: lp-rot 46s linear infinite; }
+.lp-ring .o1 { top: -26px; left: calc(50% - 26px); }
+.lp-ring .o2 { bottom: -26px; left: calc(50% - 26px); }
+.lp-ring .o3 { left: -26px; top: calc(50% - 26px); }
+.lp-ring .o4 { right: -26px; top: calc(50% - 26px); }
+.lp-feeder { position: relative; z-index: 2; animation: lp-float 8s ease-in-out infinite; filter: drop-shadow(0 24px 34px rgba(42,33,83,0.24)); }
+.lp-feeder .tower { width: 120px; height: 170px; margin: 0 auto; border-radius: 26px 26px 18px 18px; background: linear-gradient(160deg, #FFFFFF 0%, #EBE5F5 70%); border: 1px solid #DCD3EC; position: relative; }
+.lp-feeder .lens { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 38% 32%, #D8B4FE 0%, #8B5CF6 50%, #2A2153 100%); border: 3px solid #F1ECF7; box-shadow: 0 0 14px rgba(139,92,246,0.5); animation: lp-lens 4s ease-in-out infinite; }
+@keyframes lp-lens { 0%,100% { box-shadow: 0 0 10px rgba(139,92,246,0.40); } 50% { box-shadow: 0 0 20px rgba(168,85,247,0.70); } }
+.lp-feeder .slot { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 56px; height: 12px; border-radius: 8px; background: #E9E3F3; border: 1px solid #D8CEE9; }
+.lp-feeder .bowl { width: 104px; height: 30px; margin: 10px auto 0; border-radius: 0 0 44px 44px; background: linear-gradient(180deg, #8B5CF6, #6D28D9); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 12px 24px rgba(139,92,246,0.32); animation: lp-bowl 5s ease-in-out infinite; }
+@keyframes lp-bowl { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.lp-drop { position: absolute; left: 50%; bottom: 46px; width: 7px; height: 7px; margin-left: -3px; border-radius: 50%; background: #C084FC; opacity: 0; animation: lp-dropfall 2.6s ease-in infinite; }
+.lp-drop.d2 { animation-delay: 0.45s; margin-left: 3px; }
+.lp-drop.d3 { animation-delay: 0.9s; margin-left: -8px; }
+@keyframes lp-dropfall { 0% { opacity: 0; transform: translateY(0); } 12% { opacity: 1; } 60% { opacity: 1; transform: translateY(46px); } 70%, 100% { opacity: 0; transform: translateY(50px); } }
+.lp-check { display: flex; align-items: flex-start; gap: 0.8rem; margin-bottom: 1.15rem; }
+.lp-check .tick { flex-shrink: 0; width: 24px; height: 24px; border-radius: 8px; background: var(--lp-navy); border: 1px solid var(--lp-navy); display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+.lp-check .tick svg { color: #FFFFFF; }
+.lp-check b { display: block; font-size: 0.98rem; margin-bottom: 0.15rem; color: var(--lp-ink); }
+.lp-check span { font-size: 0.86rem; color: var(--lp-ink-2); line-height: 1.6; }
+
+/* ---------- Stats ---------- */
+.lp-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; margin-top: 3rem; }
+.lp-stat {
+  text-align: center; padding: 2.1rem 1rem; border-radius: 20px;
+  background: #FFFFFF;
+  border: 1px solid var(--lp-line-soft);
+  box-shadow: var(--lp-shadow-soft);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.lp-stat .num {
+  font-family: var(--lp-font-d); font-size: 2.6rem; font-weight: 700; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, #A855F7, #6D5BD0); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.lp-stat .lab { color: var(--lp-ink-2); font-weight: 600; font-size: 0.88rem; margin-top: 0.35rem; }
+
+/* ---------- How it works ---------- */
+.lp-steps { max-width: 640px; margin: 3rem auto 0; position: relative; }
+.lp-step { display: flex; gap: 1.4rem; padding-bottom: 2.4rem; position: relative; }
+.lp-step:not(:last-child)::before {
+  content: ""; position: absolute; left: 25px; top: 58px; bottom: 6px; width: 2px;
+  background: linear-gradient(to bottom, rgba(139,92,246,0.7), rgba(216,180,254,0.4));
+}
+.lp-step:not(:last-child)::after {
+  content: ""; position: absolute; left: 21px; top: 58px; width: 10px; height: 10px;
+  border-right: 2px solid rgba(139,92,246,0.85); border-bottom: 2px solid rgba(139,92,246,0.85);
+  transform: rotate(45deg); animation: lp-arrow 1.8s ease-in-out infinite;
+}
+@keyframes lp-arrow { 0%,100% { top: 58px; opacity: 1; } 50% { top: calc(100% - 22px); opacity: 0.25; } }
+.lp-step .n {
+  flex-shrink: 0; width: 52px; height: 52px; border-radius: 16px; z-index: 1;
+  background: #FFFFFF; border: 1.5px solid rgba(139,92,246,0.45);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--lp-font-d); font-weight: 700; color: #7C3AED;
+  box-shadow: 0 6px 18px rgba(139,92,246,0.18);
+}
+.lp-step h3 { font-family: var(--lp-font-d); font-size: 1.08rem; margin: 0.6rem 0 0.35rem; color: var(--lp-ink); }
+.lp-step p { color: var(--lp-ink-2); font-size: 0.9rem; margin: 0; line-height: 1.65; }
+
+/* ---------- Dashboard preview ---------- */
+.lp-dash {
+  margin-top: 3.2rem; border-radius: 26px; padding: 1.4rem; position: relative;
+  background: #FFFFFF;
+  border: 1px solid var(--lp-line-soft);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 34px 80px rgba(42,33,83,0.16);
+}
+.lp-dash-top { display: flex; gap: 6px; margin-bottom: 1.1rem; }
+.lp-dash-top i { width: 10px; height: 10px; border-radius: 50%; background: #E5DEF0; }
+.lp-dash-top i:first-child { background: #f87171; } .lp-dash-top i:nth-child(2) { background: #fbbf24; } .lp-dash-top i:nth-child(3) { background: #34d399; }
+.lp-dash-grid { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 1rem; }
+.lp-panel { background: var(--lp-bg-2); border: 1px solid var(--lp-line-soft); border-radius: 16px; padding: 1.15rem; }
+.lp-panel h4 { margin: 0 0 0.9rem; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--lp-ink-2); }
+.lp-bars { display: flex; align-items: flex-end; gap: 9px; height: 130px; }
+.lp-bars i { flex: 1; border-radius: 6px 6px 2px 2px; background: linear-gradient(to top, #8B5CF6, #D8B4FE); transform-origin: bottom; transform: scaleY(0); transition: transform 800ms cubic-bezier(0.16,1,0.3,1); }
+section.lp-s.reveal-visible .lp-bars i { transform: scaleY(1); }
+.lp-bars i:nth-child(1) { height: 46%; transition-delay: 100ms; } .lp-bars i:nth-child(2) { height: 72%; transition-delay: 180ms; }
+.lp-bars i:nth-child(3) { height: 58%; transition-delay: 260ms; } .lp-bars i:nth-child(4) { height: 90%; transition-delay: 340ms; }
+.lp-bars i:nth-child(5) { height: 64%; transition-delay: 420ms; } .lp-bars i:nth-child(6) { height: 82%; transition-delay: 500ms; }
+.lp-bars i:nth-child(7) { height: 70%; transition-delay: 580ms; }
+.lp-row { display: flex; justify-content: space-between; align-items: center; padding: 0.55rem 0; border-bottom: 1px solid #EDE7F5; font-size: 0.84rem; color: var(--lp-ink-2); }
+.lp-row:last-child { border-bottom: 0; }
+.lp-row .who { display: flex; align-items: center; gap: 0.55rem; font-weight: 700; color: var(--lp-ink); }
+.lp-row .who i { width: 26px; height: 26px; border-radius: 50%; background: var(--lp-grad); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-style: normal; font-size: 0.7rem; font-weight: 800; }
+.lp-row .t { color: var(--lp-ink-2); font-variant-numeric: tabular-nums; }
+.lp-pill { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.35rem 0.8rem; border-radius: 999px; font-size: 0.76rem; font-weight: 800; background: rgba(139,92,246,0.12); color: #7C3AED; border: 1px solid rgba(139,92,246,0.35); }
+.lp-pill i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: lp-blinkdot 2s ease-in-out infinite; }
+.lp-notif {
+  position: absolute; display: flex; align-items: center; gap: 0.6rem;
+  background: var(--lp-navy); border: 1px solid rgba(139,92,246,0.35); border-radius: 14px;
+  padding: 0.7rem 1rem; font-size: 0.8rem; font-weight: 700; color: #EDE9FE;
+  box-shadow: 0 16px 38px rgba(32,26,68,0.35); animation: lp-float 6.5s ease-in-out infinite;
+}
+.lp-notif svg { color: #C084FC; }
+.lp-notif.n1 { top: -22px; right: 6%; animation-delay: -2s; }
+.lp-notif.n2 { bottom: -20px; left: 5%; animation-delay: -4s; }
+
+/* ---------- Testimonials ---------- */
+.lp-tests { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; margin-top: 3rem; }
+.lp-test {
+  border-radius: 20px; padding: 1.7rem;
+  background: #FFFFFF;
+  border: 1px solid var(--lp-line-soft);
+  box-shadow: 0 6px 20px rgba(42,33,83,0.05);
+  transition: transform 280ms cubic-bezier(0.16,1,0.3,1), box-shadow 280ms ease;
+}
+.lp-test:hover { transform: translateY(-6px); box-shadow: 0 22px 48px rgba(42,33,83,0.14); }
+.lp-test .stars { display: flex; gap: 3px; margin-bottom: 1rem; }
+.lp-test .stars svg { color: #A855F7; }
+.lp-test p { color: var(--lp-ink-2); font-size: 0.92rem; line-height: 1.7; margin: 0 0 1.4rem; }
+.lp-test .who { display: flex; align-items: center; gap: 0.8rem; }
+.lp-test .av { width: 42px; height: 42px; border-radius: 50%; background: var(--lp-grad); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; }
+.lp-test .who b { display: block; font-size: 0.9rem; color: var(--lp-ink); }
+.lp-test .who span { font-size: 0.78rem; color: var(--lp-ink-2); }
+
+/* ---------- FAQ ---------- */
+.lp-faq { max-width: 720px; margin: 2.6rem auto 0; }
+.lp-q { border: 1px solid var(--lp-line-soft); border-radius: 16px; margin-bottom: 0.8rem; background: #FFFFFF; overflow: hidden; transition: border-color 240ms ease; box-shadow: 0 4px 14px rgba(42,33,83,0.04); }
+.lp-q[data-open="1"] { border-color: rgba(168,85,247,0.55); }
+.lp-q button {
+  all: unset; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center;
+  width: 100%; padding: 1.15rem 1.4rem; cursor: pointer; font-weight: 700; font-size: 0.98rem;
+  font-family: var(--lp-font-b); color: var(--lp-ink);
+}
+.lp-q button:focus-visible { outline: 3px solid var(--lp-primary); outline-offset: -3px; border-radius: 16px; }
+.lp-q .chev { transition: transform 300ms cubic-bezier(0.16,1,0.3,1); color: var(--lp-ink-2); flex-shrink: 0; margin-left: 1rem; }
+.lp-q[data-open="1"] .chev { transform: rotate(180deg); color: var(--lp-primary); }
+.lp-q .a { max-height: 0; overflow: hidden; transition: max-height 380ms cubic-bezier(0.16,1,0.3,1); }
+.lp-q .a p { margin: 0; padding: 0 1.4rem 1.25rem; color: var(--lp-ink-2); font-size: 0.9rem; line-height: 1.7; }
+
+/* ---------- Final CTA ---------- */
+.lp-cta {
+  border-radius: 28px; text-align: center; padding: 4.5rem 2rem; position: relative; overflow: hidden;
+  background: linear-gradient(160deg, #F1EBFA, #E7DEF7);
+  border: 1px solid rgba(139,92,246,0.30);
+}
+.lp-cta::before {
+  content: ""; position: absolute; inset: -40%;
+  background: radial-gradient(circle at 50% 120%, rgba(168,85,247,0.35), transparent 55%);
+  animation: lp-ctapulse 6s ease-in-out infinite alternate;
+}
+@keyframes lp-ctapulse { from { opacity: 0.5; } to { opacity: 1; } }
+.lp-cta > * { position: relative; }
+
+/* ---------- Footer ---------- */
+.lpfoot { background: var(--lp-navy, #201A44); border-top: 1px solid rgba(139,92,246,0.20); padding: 3.6rem 3rem 2rem; color: #B9B3D4; font-size: 0.9rem; }
+.lpfoot .cols { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1.4fr; gap: 2.4rem; }
+.lpfoot h5 { color: #fff; font-size: 0.85rem; margin: 0 0 0.9rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.lpfoot a { color: #B9B3D4; text-decoration: none; display: block; padding: 0.22rem 0; transition: color 160ms ease; }
+.lpfoot a:hover { color: #D8B4FE; }
+.lpfoot .news { display: flex; gap: 0.5rem; margin-top: 0.8rem; }
+.lpfoot .news input {
+  flex: 1; background: rgba(255,255,255,0.07); border: 1px solid rgba(139,92,246,0.30); border-radius: 10px;
+  padding: 0.65rem 0.9rem; color: #fff; font-family: var(--lp-font-b); font-size: 0.88rem;
+}
+.lpfoot .news input:focus { outline: none; border-color: #A855F7; box-shadow: 0 0 0 3px rgba(168,85,247,0.25); }
+.lpfoot .socials { display: flex; gap: 0.7rem; margin-top: 1.1rem; }
+.lpfoot .socials a { display: inline-flex; width: 38px; height: 38px; border-radius: 11px; border: 1px solid rgba(139,92,246,0.30); align-items: center; justify-content: center; padding: 0; transition: border-color 180ms ease, transform 180ms ease; }
+.lpfoot .socials a:hover { border-color: #C084FC; transform: translateY(-2px); }
+.lpfoot .legal { max-width: 1160px; margin: 2.6rem auto 0; padding-top: 1.4rem; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: 0.82rem; }
+.lpfoot .legal .links { display: flex; gap: 1.4rem; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  .lp-feats { grid-template-columns: repeat(2, 1fr); }
+  .lp-pipe { grid-template-columns: repeat(2, 1fr); gap: 2rem 0; }
+  .lp-pipe::before { display: none; }
+  .lp-stats { grid-template-columns: repeat(2, 1fr); }
+  .lp-tests { grid-template-columns: 1fr; }
+  .lp-dash-grid { grid-template-columns: 1fr; }
+  .lpfoot .cols { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 820px) {
+  .lp section { padding: 4rem 1.4rem; }
+  .lp-hero .lp-wrap, .lp-show .lp-wrap { grid-template-columns: 1fr; gap: 3rem; }
+  .lpnav { padding: 0.85rem 1.2rem; }
+  .lpnav nav { display: none; }
+  .lp-chip.c1 { left: 0; } .lp-chip.c2 { right: 0; } .lp-chip.c3 { left: 0; }
+  .lp-feats { grid-template-columns: 1fr; }
+  .lp-stats { grid-template-columns: repeat(2, 1fr); }
+  .lpfoot { padding: 2.6rem 1.4rem 1.6rem; }
+  .lpfoot .cols { grid-template-columns: 1fr; }
+  .lp-hero { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp *, .lp *::before, .lp *::after { animation: none !important; }
+  .lp [data-s], section.lp-s.reveal-init { opacity: 1 !important; transform: none !important; filter: none !important; }
+  .lp-cursor { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block nav %}
+<div class="lpnav">
+  <a href="{{ url_for('landing') }}" class="lp-logo" aria-label="PawSense home">
+    <span class="lp-mark" aria-hidden="true">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="white"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg>
+    </span>
+    PawSense
+  </a>
+  <nav aria-label="Landing page sections">
+    <a href="#how-it-works">How It Works</a>
+    <a href="#features">Features</a>
+    <a href="#products">Product</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+  <div class="lp-acts">
+    {% if session.get('user_id') %}
+      <a href="{{ url_for('auth.post_login_redirect') }}" class="lp-btn lp-btn-ghost">Dashboard</a>
+      <a href="{{ url_for('auth.logout') }}" class="lp-btn lp-btn-primary">Log Out</a>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}" class="lp-btn lp-btn-ghost">Log In</a>
+      <a href="{{ url_for('auth.signup') }}" class="lp-btn lp-btn-primary lp-magnet">Get Started</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
 
 {% block content %}
+<div class="lp">
 
-<!-- HERO -->
-<section style="padding: 4.5rem 3rem 5rem; position: relative; overflow: hidden;">
-  <div aria-hidden="true" style="position: absolute; top: 8%; left: 4%; font-size: 2rem; opacity: 0.12; transform: rotate(-15deg);">🐾</div>
-  <div aria-hidden="true" style="position: absolute; top: 60%; left: 12%; font-size: 1.5rem; opacity: 0.10; transform: rotate(20deg);">🐾</div>
-  <div aria-hidden="true" style="position: absolute; top: 20%; right: 8%; font-size: 1.75rem; opacity: 0.10; transform: rotate(8deg);">🐾</div>
+  <div class="lp-bgfx" aria-hidden="true">
+    <div class="lp-stars"></div>
+    <div class="lp-blob b1"></div>
+    <div class="lp-blob b2"></div>
+    <div class="lp-blob b3"></div>
+  </div>
+  <div class="lp-cursor" id="lpCursor" aria-hidden="true"></div>
 
-  <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; position: relative;">
+  <!-- ================= HERO ================= -->
+  <section class="lp-hero" aria-label="Introduction">
+    <div class="lp-wrap">
+      <div>
+        <span class="lp-eyebrow">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 2 3 14h7l-1 8L19 10h-7l1-8z"/></svg>
+          Computer-Vision Feeding
+        </span>
+        <h1>AI That <span class="lp-gradtext">Knows</span><br>Your Pet.</h1>
+        <p class="lp-lede">
+          PawSense recognizes each of your pets on sight and feeds them the
+          right portion at the right moment — automatically, even in a
+          multi-pet home.
+        </p>
+        <div class="lp-ctas">
+          <a href="{{ url_for('auth.signup') }}" class="lp-btn lp-btn-primary lp-magnet">
+            Get Started Free
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a href="#how-it-works" class="lp-btn lp-btn-ghost lp-magnet">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            See How It Works
+          </a>
+        </div>
+        <div class="lp-trust">
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 2l7 4v6c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-4z"/></svg> Privacy-first</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 2 3 14h7l-1 8L19 10h-7l1-8z"/></svg> Real-time AI</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg> Dogs &amp; cats</span>
+        </div>
+      </div>
 
+      <div class="lp-scene" aria-label="Live recognition demo (illustration)">
+        <svg class="lp-pawtrail p1" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg>
+        <svg class="lp-pawtrail p2" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg>
+        <svg class="lp-pawtrail p3" width="23" height="23" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg>
+
+        <div class="lp-cam lp-tilt">
+          <div class="lp-cam-head">
+            <span class="lp-rec"><i></i> LIVE · CAM 01</span>
+            <span class="lp-pill"><i></i> AI ACTIVE</span>
+          </div>
+          <div class="lp-view">
+            <span class="lp-corner tl"></span><span class="lp-corner tr"></span>
+            <span class="lp-corner bl"></span><span class="lp-corner br"></span>
+            <div class="lp-scan"></div>
+            <div class="lp-cat" aria-hidden="true">
+              <div class="head">
+                <span class="ear l"></span><span class="ear r"></span>
+                <span class="eye l"></span><span class="eye r"></span>
+                <span class="nose"></span>
+                <span class="whisk w1"></span><span class="whisk w2"></span>
+                <span class="whisk w3"></span><span class="whisk w4"></span>
+                <span class="tail"></span>
+              </div>
+            </div>
+          </div>
+          <div class="lp-toast">
+            <span class="ok"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.2"><path d="M20 6 9 17l-5-5"/></svg></span>
+            Momo recognized <span class="conf">98.2%</span>
+          </div>
+        </div>
+
+        <div class="lp-chip c1"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M16 10l6-3v10l-6-3"/></svg> OV3660 Vision</div>
+        <div class="lp-chip c2"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg> Edge AI Chip</div>
+        <div class="lp-chip c3"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0M12 20h.01"/></svg> Wi-Fi Sync</div>
+        <span class="lp-kibble k1"></span><span class="lp-kibble k2"></span><span class="lp-kibble k3"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PIPELINE ================= -->
+  <section class="lp-s" id="how-it-works" aria-label="AI pipeline">
+    <div class="lp-wrap lp-center">
+      <span class="lp-eyebrow">The Pipeline</span>
+      <h2>From <span class="lp-gradtext">Sight</span> to Serving in Under a Second</h2>
+      <p class="lp-sub">Five stages run on every frame — so the right pet gets the right bowl, every time.</p>
+
+      <div class="lp-pipe">
+        <div class="lp-node" data-s="1">
+          <div class="ic"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M16 10l6-3v10l-6-3"/></svg></div>
+          <h3>Camera</h3><p>A live frame is captured the moment motion is sensed.</p>
+        </div>
+        <div class="lp-node" data-s="2">
+          <div class="ic"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 3v18"/></svg></div>
+          <h3>AI Detection</h3><p>YOLO spots whether an animal is present in the frame.</p>
+        </div>
+        <div class="lp-node" data-s="3">
+          <div class="ic"><svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg></div>
+          <h3>Recognition</h3><p>An embedding model matches the face to your registered pets.</p>
+        </div>
+        <div class="lp-node" data-s="4">
+          <div class="ic"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.2 2.2M16.2 16.2l2.2 2.2M18.4 5.6l-2.2 2.2M7.8 16.2l-2.2 2.2"/><circle cx="12" cy="12" r="4"/></svg></div>
+          <h3>Decision Engine</h3><p>Schedule, portion and history decide: feed now, or wait.</p>
+        </div>
+        <div class="lp-node" data-s="5">
+          <div class="ic"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11h16l-1.5 8.5a2 2 0 0 1-2 1.5h-9a2 2 0 0 1-2-1.5L4 11z"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+          <h3>Food Dispensed</h3><p>The exact portion drops. The event is logged instantly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEATURES ================= -->
+  <section class="lp-s" id="features" aria-label="Features">
+    <div class="lp-wrap lp-center">
+      <span class="lp-eyebrow">Capabilities</span>
+      <h2>Everything a Modern Feeder <span class="lp-gradtext">Should Be</span></h2>
+      <p class="lp-sub">Built from the camera up around one idea: your pets are individuals.</p>
+
+      <div class="lp-feats" style="text-align:left;">
+        <div class="lp-feat lp-tilt" data-s="1">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg></div>
+          <h3>Pet Recognition</h3><p>Tells Momo from Max on sight — no collars, no tags, no guesswork.</p>
+        </div>
+        <div class="lp-feat lp-tilt" data-s="2">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+          <h3>Portion Control</h3><p>Each pet gets their own gram-accurate serving on their own schedule.</p>
+        </div>
+        <div class="lp-feat lp-tilt" data-s="3">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M16 10l6-3v10l-6-3"/></svg></div>
+          <h3>Live Camera</h3><p>Watch the bowl from anywhere with a real-time in-app stream.</p>
+        </div>
+        <div class="lp-feat lp-tilt" data-s="4">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18M6 16v-5M11 16V7M16 16v-8M21 16V4"/></svg></div>
+          <h3>Health Analytics</h3><p>Feeding trends per pet, surfaced as clear charts — not raw logs.</p>
+        </div>
+        <div class="lp-feat lp-tilt" data-s="5">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></div>
+          <h3>Mobile Dashboard</h3><p>Feed, review and manage from a dashboard that works on any screen.</p>
+        </div>
+        <div class="lp-feat lp-tilt" data-s="6">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 18a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4 1.6A4 4 0 0 0 7 18h10.5z"/></svg></div>
+          <h3>Cloud Sync</h3><p>Every event syncs to your account the moment it happens.</p>
+        </div>
+        <div class="lp-feat lp-tilt" data-s="7">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8L19 10h-7l1-8z"/></svg></div>
+          <h3>Real-time AI</h3><p>Detection to decision in under a second, running continuously.</p>
+        </div>
+        <div class="lp-feat lp-tilt" data-s="8">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+          <h3>Secure Data</h3><p>Per-user isolation and API-key device auth, private by default.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SHOWCASE ================= -->
+  <section class="lp-s lp-show" id="products" aria-label="Product showcase">
+    <div class="lp-wrap">
+      <div class="lp-orbitbox" aria-hidden="true">
+        <div class="lp-ring r1">
+          <span class="lp-orb o1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M16 10l6-3v10l-6-3"/></svg></span>
+          <span class="lp-orb o3"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0M12 20h.01"/></svg></span>
+        </div>
+        <div class="lp-ring r2">
+          <span class="lp-orb o2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></span>
+          <span class="lp-orb o4"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg></span>
+        </div>
+        <div class="lp-feeder">
+          <div class="tower">
+            <span class="lens"></span>
+            <span class="slot"></span>
+            <span class="lp-drop"></span><span class="lp-drop d2"></span><span class="lp-drop d3"></span>
+          </div>
+          <div class="bowl"></div>
+        </div>
+      </div>
+      <div>
+        <span class="lp-eyebrow">The Hardware</span>
+        <h2>One Device. <span class="lp-gradtext">Every Pet Covered.</span></h2>
+        <p class="lp-sub" style="margin-bottom: 2rem;">An ESP32-powered feeder with an onboard vision camera, talking to a cloud AI brain.</p>
+        <div class="lp-check" data-s="1">
+          <span class="tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <div><b>Onboard vision camera</b><span>An OV3660 sensor watches the bowl and streams frames to the AI in real time.</span></div>
+        </div>
+        <div class="lp-check" data-s="2">
+          <span class="tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <div><b>Precision dispensing</b><span>A servo-driven gate releases exact portions — no free-for-all bowls.</span></div>
+        </div>
+        <div class="lp-check" data-s="3">
+          <span class="tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <div><b>Always connected</b><span>Wi-Fi heartbeats keep the device visible in your dashboard 24/7.</span></div>
+        </div>
+        <div class="lp-check" data-s="4">
+          <span class="tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <div><b>Fails safe</b><span>If the network drops, feeding rules stay conservative — pets never over-fed.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STATS ================= -->
+  <section class="lp-s" aria-label="Statistics">
+    <div class="lp-wrap lp-center">
+      <div class="lp-stats">
+        <div class="lp-stat" data-s="1"><div class="num"><span data-count="99.8" data-decimals="1">0</span>%</div><div class="lab">AI Accuracy</div></div>
+        <div class="lp-stat" data-s="2"><div class="num"><span data-count="24">0</span>/7</div><div class="lab">Monitoring</div></div>
+        <div class="lp-stat" data-s="3"><div class="num">&lt;<span data-count="1">0</span> sec</div><div class="lab">Detection Speed</div></div>
+        <div class="lp-stat" data-s="4"><div class="num"><span data-count="100">0</span>%</div><div class="lab">Pet Safe</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section class="lp-s" aria-label="How it works">
+    <div class="lp-wrap lp-center">
+      <span class="lp-eyebrow">Getting Started</span>
+      <h2>Up and Running in <span class="lp-gradtext">Five Steps</span></h2>
+      <div class="lp-steps" style="text-align:left;">
+        <div class="lp-step" data-s="1"><span class="n">01</span><div><h3>Register your pet</h3><p>Upload a few clear photos and set their portion size. That's the whole enrollment.</p></div></div>
+        <div class="lp-step" data-s="2"><span class="n">02</span><div><h3>AI recognizes them</h3><p>The next time they approach the feeder, PawSense knows exactly who's there.</p></div></div>
+        <div class="lp-step" data-s="3"><span class="n">03</span><div><h3>The system decides</h3><p>Schedule, portions and feeding history combine into a single instant decision.</p></div></div>
+        <div class="lp-step" data-s="4"><span class="n">04</span><div><h3>Food is dispensed</h3><p>The right portion drops for the right pet — and only the right pet.</p></div></div>
+        <div class="lp-step" data-s="5"><span class="n">05</span><div><h3>Track everything</h3><p>Every detection and meal appears in your dashboard history, per pet.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DASHBOARD PREVIEW ================= -->
+  <section class="lp-s" aria-label="Dashboard preview">
+    <div class="lp-wrap lp-center">
+      <span class="lp-eyebrow">Command Center</span>
+      <h2>Your Whole Pack, <span class="lp-gradtext">One Dashboard</span></h2>
+      <p class="lp-sub">Live device status, feeding analytics and full history — in real time.</p>
+
+      <div class="lp-dash lp-tilt" style="text-align:left;">
+        <div class="lp-notif n1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg> Momo was fed · just now</div>
+        <div class="lp-notif n2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M16 10l6-3v10l-6-3"/></svg> Camera online</div>
+        <div class="lp-dash-top" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="lp-dash-grid">
+          <div class="lp-panel">
+            <h4>Feedings This Week</h4>
+            <div class="lp-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="lp-panel">
+            <h4>Recent Activity</h4>
+            <div class="lp-row"><span class="who"><i>M</i> Momo</span><span class="t">08:12</span></div>
+            <div class="lp-row"><span class="who"><i>A</i> Alim</span><span class="t">08:40</span></div>
+            <div class="lp-row"><span class="who"><i>K</i> Khalifa</span><span class="t">12:05</span></div>
+            <div class="lp-row"><span class="who"><i>M</i> Momo</span><span class="t">18:22</span></div>
+          </div>
+          <div class="lp-panel">
+            <h4>AI Status</h4>
+            <p style="margin: 0 0 0.9rem;"><span class="lp-pill"><i></i> ONLINE</span></p>
+            <div class="lp-row"><span>Model</span><span class="t">YOLO + EffNet</span></div>
+            <div class="lp-row"><span>Latency</span><span class="t">0.4s</span></div>
+            <div class="lp-row"><span>Device</span><span class="t">ESP32-S3</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TESTIMONIALS ================= -->
+  <section class="lp-s" aria-label="Testimonials">
+    <div class="lp-wrap lp-center">
+      <span class="lp-eyebrow">Loved by Pet Parents</span>
+      <h2>They Stopped Worrying About <span class="lp-gradtext">Feeding Time</span></h2>
+      <div class="lp-tests" style="text-align:left;">
+        <div class="lp-test" data-s="1">
+          <div class="stars" aria-label="5 out of 5 stars">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+          </div>
+          <p>"My cat was stealing the dog's food for years. PawSense ended it in a day — it just knows who's who."</p>
+          <div class="who"><span class="av">SR</span><div><b>Sara R.</b><span>Two cats, one dog</span></div></div>
+        </div>
+        <div class="lp-test" data-s="2">
+          <div class="stars" aria-label="5 out of 5 stars">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+          </div>
+          <p>"The live camera plus the feeding history means I can check on my senior dog from the office. Total peace of mind."</p>
+          <div class="who"><span class="av">JK</span><div><b>James K.</b><span>Golden retriever owner</span></div></div>
+        </div>
+        <div class="lp-test" data-s="3">
+          <div class="stars" aria-label="5 out of 5 stars">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+          </div>
+          <p>"Vet put one of our cats on a diet. PawSense enforces it perfectly — the other two still eat normally."</p>
+          <div class="who"><span class="av">LN</span><div><b>Lina N.</b><span>Three-cat household</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section class="lp-s" id="faq" aria-label="Frequently asked questions">
+    <div class="lp-wrap lp-center">
+      <span class="lp-eyebrow">FAQ</span>
+      <h2>Questions, <span class="lp-gradtext">Answered</span></h2>
+      <div class="lp-faq" style="text-align:left;">
+        <div class="lp-q">
+          <button type="button" aria-expanded="false">How does PawSense tell my pets apart?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="a"><p>A detection model first confirms an animal is present, then an embedding model compares the face against the photos you registered. If the match confidence clears the threshold, the pet is identified.</p></div>
+        </div>
+        <div class="lp-q">
+          <button type="button" aria-expanded="false">Does it work with multiple pets?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="a"><p>That's exactly what it's built for. Register each pet separately with their own portion size and schedule — the feeder treats every animal as an individual.</p></div>
+        </div>
+        <div class="lp-q">
+          <button type="button" aria-expanded="false">What happens if the AI isn't sure who it sees?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="a"><p>It plays it safe: no dispensing on an uncertain match. The event is still logged as an unrecognized detection so you can review it later.</p></div>
+        </div>
+        <div class="lp-q">
+          <button type="button" aria-expanded="false">Is my data private?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="a"><p>Yes. Your pets, photos, device and history are isolated to your account, and your feeder authenticates with its own private API key.</p></div>
+        </div>
+        <div class="lp-q">
+          <button type="button" aria-expanded="false">What hardware does it run on?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="a"><p>An ESP32-S3 board with an onboard OV3660 camera handles sensing and dispensing, while the AI pipeline runs server-side for full accuracy.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FINAL CTA ================= -->
+  <section class="lp-s" aria-label="Sign up">
+    <div class="lp-wrap">
+      <div class="lp-cta">
+        <span class="lp-eyebrow">Start Today</span>
+        <h2 style="margin-top: 1.2rem;">Give Every Pet <span class="lp-gradtext">Their Own Feeder</span></h2>
+        <p class="lp-sub" style="margin: 0 auto 2.2rem;">Set up your account, register your pets, and let the AI take the night shift.</p>
+        <a href="{{ url_for('auth.signup') }}" class="lp-btn lp-btn-primary lp-magnet" style="font-size: 1.05rem; padding: 0.95rem 2.4rem;">
+          Sign Up Free
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  /* FAQ accordion */
+  document.querySelectorAll('.lp-q').forEach(function (q) {
+    var btn = q.querySelector('button');
+    var panel = q.querySelector('.a');
+    btn.addEventListener('click', function () {
+      var open = q.getAttribute('data-open') === '1';
+      document.querySelectorAll('.lp-q[data-open="1"]').forEach(function (other) {
+        other.setAttribute('data-open', '0');
+        other.querySelector('button').setAttribute('aria-expanded', 'false');
+        other.querySelector('.a').style.maxHeight = '0px';
+      });
+      if (!open) {
+        q.setAttribute('data-open', '1');
+        btn.setAttribute('aria-expanded', 'true');
+        panel.style.maxHeight = panel.scrollHeight + 'px';
+      }
+    });
+  });
+
+  /* Animated counters */
+  var counters = document.querySelectorAll('[data-count]');
+  if ('IntersectionObserver' in window && counters.length) {
+    var cObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        cObs.unobserve(el);
+        var target = parseFloat(el.getAttribute('data-count'));
+        var decimals = parseInt(el.getAttribute('data-decimals') || '0', 10);
+        if (reduced) { el.textContent = target.toFixed(decimals); return; }
+        var start = null, dur = 1400;
+        function tick(ts) {
+          if (!start) start = ts;
+          var p = Math.min((ts - start) / dur, 1);
+          var eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = (target * eased).toFixed(decimals);
+          if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }, { threshold: 0.5 });
+    counters.forEach(function (c) { cObs.observe(c); });
+  }
+
+  if (reduced || !finePointer) return;
+
+  /* Cursor glow */
+  var glow = document.getElementById('lpCursor');
+  var gx = 0, gy = 0, pending = false;
+  window.addEventListener('mousemove', function (e) {
+    gx = e.clientX; gy = e.clientY;
+    if (!pending) {
+      pending = true;
+      requestAnimationFrame(function () {
+        glow.style.transform = 'translate(' + (gx - 240) + 'px,' + (gy - 240) + 'px)';
+        glow.style.opacity = '1';
+        pending = false;
+      });
+    }
+  }, { passive: true });
+
+  /* Card tilt */
+  document.querySelectorAll('.lp-tilt').forEach(function (card) {
+    var raf = null;
+    card.addEventListener('mousemove', function (e) {
+      if (raf) return;
+      raf = requestAnimationFrame(function () {
+        var r = card.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - 0.5;
+        var py = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = 'perspective(900px) rotateX(' + (py * -5) + 'deg) rotateY(' + (px * 7) + 'deg) translateY(-4px)';
+        raf = null;
+      });
+    }, { passive: true });
+    card.addEventListener('mouseleave', function () {
+      card.style.transform = '';
+    });
+  });
+
+  /* Magnetic buttons */
+  document.querySelectorAll('.lp-magnet').forEach(function (btn) {
+    btn.addEventListener('mousemove', function (e) {
+      var r = btn.getBoundingClientRect();
+      var dx = e.clientX - (r.left + r.width / 2);
+      var dy = e.clientY - (r.top + r.height / 2);
+      btn.style.transform = 'translate(' + dx * 0.18 + 'px,' + dy * 0.18 + 'px)';
+    }, { passive: true });
+    btn.addEventListener('mouseleave', function () { btn.style.transform = ''; });
+  });
+
+  /* Hero blob parallax */
+  var blobs = document.querySelectorAll('.lp-blob');
+  var bx = 0, by = 0, bpend = false;
+  window.addEventListener('mousemove', function (e) {
+    bx = (e.clientX / window.innerWidth - 0.5);
+    by = (e.clientY / window.innerHeight - 0.5);
+    if (!bpend) {
+      bpend = true;
+      requestAnimationFrame(function () {
+        blobs.forEach(function (b, i) {
+          var depth = (i + 1) * 14;
+          b.style.translate = (bx * depth) + 'px ' + (by * depth) + 'px';
+        });
+        bpend = false;
+      });
+    }
+  }, { passive: true });
+})();
+</script>
+{% endblock %}
+
+{% block footer %}
+<footer class="lpfoot">
+  <div class="cols">
     <div>
-      <h1 style="font-size: 3.1rem; line-height: 1.1; font-weight: 800; margin: 0 0 1.25rem; letter-spacing: -1px; color: var(--navy);">
-        We <span style="color: var(--brand);">Recognize</span><br>Every Pet.
-      </h1>
-      <p style="font-size: 1.08rem; color: var(--ink-soft); max-width: 460px; margin-bottom: 2rem;">
-        PawSense uses computer vision to tell your pets apart automatically,
-        so feeding stays fair, accurate, and worry-free — even with several
-        animals sharing one home.
-      </p>
-      <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.75rem;">
-        <a href="{{ url_for('auth.signup') }}" class="btn btn-primary" style="padding: 0.85rem 2rem; font-size: 1rem;">Get Started</a>
-        <a href="#how-it-works" class="btn btn-outline" style="padding: 0.85rem 2rem; font-size: 1rem;">▶ See How It Works</a>
-      </div>
-      <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--ink-soft); font-weight: 600;">
-        <span>🔒 Privacy-first</span>
-        <span>⚡ Real-time AI</span>
-        <span>🐾 Dogs &amp; cats</span>
-      </div>
-    </div>
-
-    <div style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 420px;">
-      <div style="width: 340px; height: 340px; background: var(--brand-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 7rem; position: relative;">
-        🐶
-      </div>
-
-      <div style="position: absolute; top: 6%; left: -2%; background: var(--paper); border-radius: 999px; padding: 0.55rem 1.1rem; box-shadow: var(--clay-raised); display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 700; color: var(--navy);">
-        ✅ Trusted by Pet Parents
-      </div>
-
-      <div style="position: absolute; top: 12%; right: 2%; width: 52px; height: 52px; border-radius: 50%; background: var(--paper); box-shadow: var(--clay-raised); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-        🐱
-      </div>
-
-      <div style="position: absolute; bottom: 18%; right: -4%; width: 52px; height: 52px; border-radius: 50%; background: var(--paper); box-shadow: var(--clay-raised); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-        🐰
-      </div>
-
-      <div style="position: absolute; bottom: -2%; left: 4%; background: var(--paper); border-radius: 16px; padding: 0.85rem 1.1rem; box-shadow: var(--clay-raised); display: flex; align-items: center; gap: 0.65rem; min-width: 200px;">
-        <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--brand-light); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">🐾</div>
-        <div>
-          <div style="font-weight: 700; font-size: 0.85rem; color: var(--navy);">Bella — Fed 2 min ago</div>
-          <div style="font-size: 0.75rem; color: var(--status-good); font-weight: 600;">98% match confidence</div>
-        </div>
-      </div>
-
-      <div style="position: absolute; top: 42%; left: -8%; background: var(--navy); color: white; border-radius: 999px; padding: 0.5rem 1rem; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
-        📷 Live Detection Active
+      <a href="{{ url_for('landing') }}" class="lp-logo" style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.2rem; color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+        <span style="width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #C084FC, #8B5CF6); display: inline-flex; align-items: center; justify-content: center;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg>
+        </span>
+        PawSense
+      </a>
+      <p style="max-width: 280px; line-height: 1.7; margin-top: 0.9rem;">Smart feeding, powered by computer vision — so every pet gets fed by the right bowl, every time.</p>
+      <div class="socials">
+        <a href="https://github.com/alimansoor2003/pet_feeder" aria-label="GitHub" target="_blank" rel="noopener">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.17c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.78 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.25 5.67.41.35.78 1.05.78 2.12v3.14c0 .3.2.66.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        </a>
+        <a href="#" aria-label="X (Twitter)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3l-4.9-6.5L6.4 22H3.3l7.3-8.4L1.2 2h6.4l4.5 5.9L18.9 2zm-1.1 18h1.7L6.7 3.9H4.9L17.8 20z"/></svg>
+        </a>
+        <a href="#" aria-label="Instagram">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.8" cy="6.2" r="1.3" fill="currentColor" stroke="none"/></svg>
+        </a>
       </div>
     </div>
-
-  </div>
-</section>
-
-<!-- STATS -->
-<section id="mission" style="padding: 1rem 3rem 5rem; max-width: 1200px; margin: 0 auto;">
-  <div style="text-align: center; max-width: 700px; margin: 0 auto 3rem;">
-    <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem; color: var(--navy);">Our Mission</h2>
-    <p style="color: var(--ink-soft); font-size: 1.05rem;">
-      We believe every pet deserves food made just for them — not whichever
-      animal gets to the bowl first. PawSense brings fairness and peace of
-      mind to multi-pet households, using the same computer-vision technology
-      found in modern security and identity systems.
-    </p>
-  </div>
-
-  <div class="grid cols-3">
-    <div class="stat-card">
-      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🐾</div>
-      <div class="value">10K+</div>
-      <div class="label">Happy Pets</div>
+    <div>
+      <h5>Product</h5>
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#products">Hardware</a>
+      <a href="#faq">FAQ</a>
     </div>
-    <div class="stat-card">
-      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🎯</div>
-      <div class="value">99%</div>
-      <div class="label">Detection Accuracy</div>
+    <div>
+      <h5>Account</h5>
+      <a href="{{ url_for('auth.signup') }}">Sign Up</a>
+      <a href="{{ url_for('auth.login') }}">Log In</a>
+      <a href="https://github.com/alimansoor2003/pet_feeder" target="_blank" rel="noopener">GitHub</a>
+      <a href="#">Contact</a>
     </div>
-    <div class="stat-card">
-      <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🕒</div>
-      <div class="value">24/7</div>
-      <div class="label">Monitoring</div>
+    <div>
+      <h5>Stay in the Loop</h5>
+      <p style="margin: 0; line-height: 1.6;">Product updates and pet-care AI news. No spam.</p>
+      <form class="news" onsubmit="event.preventDefault(); this.querySelector('input').value=''; this.querySelector('button').textContent='Subscribed ✓';">
+        <input type="email" placeholder="you@email.com" aria-label="Email address" required>
+        <button type="submit" class="lp-btn lp-btn-primary" style="padding: 0.65rem 1.2rem; font-size: 0.85rem;">Subscribe</button>
+      </form>
     </div>
   </div>
-</section>
-
-<!-- WHAT WE OFFER -->
-<section id="products" style="padding: 0 3rem 5rem; max-width: 1200px; margin: 0 auto;">
-  <div style="text-align: center; max-width: 700px; margin: 0 auto 3rem;">
-    <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem; color: var(--navy);">What We Offer</h2>
-    <p style="color: var(--ink-soft); font-size: 1.05rem;">Everything you need to feed every pet fairly, automatically.</p>
+  <div class="legal">
+    <span>© 2026 PawSense. All rights reserved.</span>
+    <span class="links"><a href="#" style="display:inline;">Privacy</a><a href="#" style="display:inline;">Terms</a></span>
   </div>
-
-  <div class="grid cols-3">
-    <div class="card" style="background: var(--brand-light); border: none;">
-      <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--paper); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1rem;">🔍</div>
-      <h3 style="margin: 0 0 0.5rem; color: var(--navy);">Smart Detection</h3>
-      <p style="color: var(--ink-soft); font-size: 0.92rem; margin: 0;">YOLO-based vision spots a dog or cat at the bowl, then matches them against your registered pets.</p>
-    </div>
-    <div class="card" style="background: var(--paper); border: 1.5px solid var(--border);">
-      <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--brand-light); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1rem;">⚖️</div>
-      <h3 style="margin: 0 0 0.5rem; color: var(--navy);">Fair Feeding</h3>
-      <p style="color: var(--ink-soft); font-size: 0.92rem; margin: 0;">Daily limits and schedules are enforced automatically, so no pet over- or under-eats.</p>
-    </div>
-    <div class="card" style="background: #eaf6ee; border: none;">
-      <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--paper); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1rem;">📊</div>
-      <h3 style="margin: 0 0 0.5rem; color: var(--navy);">Live Dashboard</h3>
-      <p style="color: var(--ink-soft); font-size: 0.92rem; margin: 0;">See at a glance whether every pet is okay, fed, and the feeder is working.</p>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section id="how-it-works" style="background: var(--paper); padding: 5rem 3rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
-  <div style="max-width: 1200px; margin: 0 auto;">
-    <div style="text-align: center; max-width: 700px; margin: 0 auto 3rem;">
-      <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem; color: var(--navy);">How It Works</h2>
-      <p style="color: var(--ink-soft); font-size: 1.05rem;">From photo to feeding decision in four simple steps.</p>
-    </div>
-
-    <div class="grid cols-4">
-      <div class="card" style="text-align: center;">
-        <div style="width: 44px; height: 44px; background: var(--brand); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 1rem;">1</div>
-        <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--navy);">Register Your Pet</h3>
-        <p style="color: var(--ink-soft); font-size: 0.88rem; margin: 0;">Upload one clear photo of each pet to your dashboard.</p>
-      </div>
-      <div class="card" style="text-align: center;">
-        <div style="width: 44px; height: 44px; background: var(--brand); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 1rem;">2</div>
-        <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--navy);">Detect the Animal</h3>
-        <p style="color: var(--ink-soft); font-size: 0.88rem; margin: 0;">YOLO object detection checks whether a dog or cat is at the bowl.</p>
-      </div>
-      <div class="card" style="text-align: center;">
-        <div style="width: 44px; height: 44px; background: var(--brand); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 1rem;">3</div>
-        <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--navy);">Identify the Pet</h3>
-        <p style="color: var(--ink-soft); font-size: 0.88rem; margin: 0;">An embedding model matches them against your registered pets.</p>
-      </div>
-      <div class="card" style="text-align: center;">
-        <div style="width: 44px; height: 44px; background: var(--brand); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 1rem;">4</div>
-        <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--navy);">Feed, Within Limits</h3>
-        <p style="color: var(--ink-soft); font-size: 0.88rem; margin: 0;">Feeding is allowed or paused based on schedule and daily limits.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- PRICING -->
-<section style="padding: 5rem 3rem; max-width: 1200px; margin: 0 auto;">
-  <div style="text-align: center; max-width: 700px; margin: 0 auto 3rem;">
-    <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem; color: var(--navy);">Choose Your Plan</h2>
-    <p style="color: var(--ink-soft); font-size: 1.05rem;">Start free. Upgrade when your pack grows.</p>
-  </div>
-
-  <div class="grid cols-3">
-    <div class="card">
-      <div style="font-size: 0.78rem; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px;">Basic</div>
-      <div style="display: flex; align-items: baseline; gap: 0.3rem; margin: 0.5rem 0 1.5rem;">
-        <span style="font-size: 1.6rem; font-weight: 800; color: var(--navy);">Free</span>
-      </div>
-      <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem; color: var(--ink-soft); font-size: 0.9rem; line-height: 2;">
-        <li>✓ 1 registered pet</li>
-        <li>✓ Manual detection testing</li>
-        <li>✓ 7-day history</li>
-        <li>✓ Email support</li>
-      </ul>
-      <a href="{{ url_for('auth.signup') }}" class="btn btn-outline btn-block">Get Started</a>
-    </div>
-
-    <div class="card" style="background: var(--navy); border: none; transform: scale(1.03);">
-      <div style="font-size: 0.78rem; font-weight: 700; color: var(--brand-light); text-transform: uppercase; letter-spacing: 0.5px;">Most Popular</div>
-      <div style="display: flex; align-items: baseline; gap: 0.3rem; margin: 0.5rem 0 1.5rem;">
-        <span style="font-size: 1.6rem; font-weight: 800; color: white;">Plus</span>
-      </div>
-      <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem; color: #cfd1e0; font-size: 0.9rem; line-height: 2;">
-        <li>✓ Up to 5 registered pets</li>
-        <li>✓ Live camera detection</li>
-        <li>✓ Unlimited history</li>
-        <li>✓ Daily feeding limits</li>
-        <li>✓ Priority support</li>
-      </ul>
-      <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-block">Get Started</a>
-    </div>
-
-    <div class="card">
-      <div style="font-size: 0.78rem; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px;">Family</div>
-      <div style="display: flex; align-items: baseline; gap: 0.3rem; margin: 0.5rem 0 1.5rem;">
-        <span style="font-size: 1.6rem; font-weight: 800; color: var(--navy);">Custom</span>
-      </div>
-      <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem; color: var(--ink-soft); font-size: 0.9rem; line-height: 2;">
-        <li>✓ Unlimited pets</li>
-        <li>✓ Multiple feeders</li>
-        <li>✓ Shared household access</li>
-        <li>✓ Dedicated support</li>
-      </ul>
-      <a href="{{ url_for('auth.signup') }}" class="btn btn-outline btn-block">Contact Us</a>
-    </div>
-  </div>
-</section>
-
-<!-- TESTIMONIALS -->
-<section style="background: var(--paper); padding: 5rem 3rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
-  <div style="max-width: 1200px; margin: 0 auto;">
-    <div style="text-align: center; max-width: 700px; margin: 0 auto 3rem;">
-      <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem; color: var(--navy);">What Pet Owners Are Saying</h2>
-    </div>
-
-    <div class="grid cols-3">
-      <div class="card">
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--brand-light); color: var(--brand-dark); display: flex; align-items: center; justify-content: center; font-weight: 800;">FK</div>
-          <div>
-            <div style="font-weight: 700; color: var(--navy); font-size: 0.92rem;">Foysal K.</div>
-            <div style="font-size: 0.78rem; color: var(--ink-soft);">★★★★★</div>
-          </div>
-        </div>
-        <p style="font-size: 0.9rem; color: var(--ink-soft); margin: 0;">Our two cats used to fight over the bowl. Now each one only gets fed when it's actually them — total game changer.</p>
-      </div>
-      <div class="card">
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--brand-light); color: var(--brand-dark); display: flex; align-items: center; justify-content: center; font-weight: 800;">IT</div>
-          <div>
-            <div style="font-weight: 700; color: var(--navy); font-size: 0.92rem;">Ishita T.</div>
-            <div style="font-size: 0.78rem; color: var(--ink-soft);">★★★★★</div>
-          </div>
-        </div>
-        <p style="font-size: 0.9rem; color: var(--ink-soft); margin: 0;">Setup took five minutes. I love being able to check the dashboard and instantly know if everyone's eaten.</p>
-      </div>
-      <div class="card">
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--brand-light); color: var(--brand-dark); display: flex; align-items: center; justify-content: center; font-weight: 800;">AN</div>
-          <div>
-            <div style="font-weight: 700; color: var(--navy); font-size: 0.92rem;">Aadro N.</div>
-            <div style="font-size: 0.78rem; color: var(--ink-soft);">★★★★★</div>
-          </div>
-        </div>
-        <p style="font-size: 0.9rem; color: var(--ink-soft); margin: 0;">The feeding limits gave me real peace of mind — our dog used to sneak extra meals from the cat's bowl.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
-<section style="padding: 5rem 3rem; text-align: center; max-width: 1200px; margin: 0 auto;">
-  <div style="font-size: 2.5rem; margin-bottom: 1rem; letter-spacing: 0.5rem;">🐶🐱🐰🐹🐕</div>
-  <h2 style="font-size: 1.9rem; font-weight: 800; margin-bottom: 1rem; color: var(--navy);">Ready to give every pet their own bowl experience?</h2>
-  <p style="color: var(--ink-soft); max-width: 480px; margin: 0 auto 2rem;">Create your free account and register your first pet in under a minute.</p>
-  <a href="{{ url_for('auth.signup') }}" class="btn btn-primary" style="padding: 0.9rem 2.25rem; font-size: 1rem;">Sign Up Free</a>
-</section>
-
+</footer>
 {% endblock %}

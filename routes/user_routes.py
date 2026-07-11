@@ -10,7 +10,7 @@ import os
 import re
 from datetime import datetime, date
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, send_file, url_for
 from werkzeug.utils import secure_filename
 
 import auth
@@ -27,6 +27,37 @@ ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
 
 def _allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@bp.route("/pet-photo/<filename>")
+@auth.login_required
+def pet_photo(filename):
+    """
+    Serves a pet photo the logged-in user uploaded.
+
+    Uploaded photos live in each user's PRIVATE data folder
+    (data/u_xxx/uploads/), which Flask's normal static handler does not
+    expose — that's why pet images previously fell back to the paw-print
+    placeholder everywhere. This route serves them safely:
+
+    - login_required: you must be signed in.
+    - We only ever look inside THE CURRENT USER's own uploads folder, so
+      one user can never request another user's photos by guessing a name.
+    - secure_filename + the "must stay inside the uploads dir" check block
+      path-traversal attempts (e.g. ../../users.json).
+    """
+    user = auth.current_user()
+    paths = auth.user_paths(user["id"])
+    uploads_dir = os.path.abspath(paths["uploads"])
+
+    safe_name = secure_filename(filename)
+    full_path = os.path.abspath(os.path.join(uploads_dir, safe_name))
+
+    # Reject anything that escaped the uploads directory, or doesn't exist.
+    if not full_path.startswith(uploads_dir + os.sep) or not os.path.isfile(full_path):
+        abort(404)
+
+    return send_file(full_path)
 
 
 def _load_feeding_log(path):
