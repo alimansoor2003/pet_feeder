@@ -4,7 +4,7 @@ app.py - PawSense Smart Pet Feeder Web Application
 Public marketing site (landing, signup, login) + a private per-user
 dashboard. Auth lives in auth.py; this file just wires routes,
 sessions, and per-user file paths together.
-"""
+""" 
 from dotenv import load_dotenv
 load_dotenv()
 import json
