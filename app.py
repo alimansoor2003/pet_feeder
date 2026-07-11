@@ -1,6 +1,6 @@
 """
 app.py - PawSense Smart Pet Feeder
-
+ 
 App factory only. All real route logic lives in routes/*.py, organized
 by who's allowed to use them:
   routes/auth_routes.py   - shared login/signup/logout
