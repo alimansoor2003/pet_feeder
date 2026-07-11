@@ -4,5 +4,7 @@ torch
 torchvision
 pillow
 numpy
-timm
 opencv-python
+timm
+rembg
+onnxruntime
