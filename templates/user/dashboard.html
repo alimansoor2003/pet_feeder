@@ -1,149 +1,346 @@
 {% extends "user/_nav.html" %}
 {% block title %}Dashboard — PawSense{% endblock %}
-{% block page_content %}
 
+{% block page_content %}
 <style>
-  /* Dashboard "Your Pets" — centered cards with a circular photo,
-     inspired by premium pet-brand hero framing. Scoped to .dash-pet* so
-     the pets-management page keeps its own gallery styling untouched. */
-  .dash-pets {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    justify-content: center;
-    margin-top: 1rem;
+  /* ==========================================================================
+     Dashboard — "Paws & Care" style layout
+     Left sidebar · main column (hero pet, quick actions, panels) · right rail
+     (activity ring, tip, camera). Scoped with .dsh- prefix; uses the global
+     lavender tokens from base.html.
+     ========================================================================== */
+  .dsh-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 1.25rem;
+    align-items: start;
   }
-  .dash-pet-card {
-    width: 240px;
-    background: var(--paper);
-    border-radius: var(--radius);
-    padding: 1.75rem 1.25rem 1.5rem;
-    text-align: center;
+
+  /* ---------- Main column ---------- */
+  .dsh-main { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+  .dsh-head {
+    background: var(--paper); border-radius: 22px; padding: 1.1rem 1.5rem;
+    box-shadow: var(--clay-raised); border: 1px solid rgba(139, 92, 246, 0.08);
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  }
+  .dsh-head h1 { margin: 0; font-size: 1.25rem; }
+  .dsh-head p { margin: 0.1rem 0 0; color: var(--ink-soft); font-size: 0.85rem; }
+
+  /* Hero */
+  .dsh-hero {
+    position: relative; border-radius: 26px; overflow: hidden;
+    background: linear-gradient(160deg, #F3EDFB 0%, #E9E1F7 55%, #DFD5F3 100%);
+    border: 1px solid rgba(139, 92, 246, 0.14);
     box-shadow: var(--clay-raised);
-    border: 1px solid rgba(139, 92, 246, 0.08);
-    cursor: pointer;
-    transition: transform var(--dur-base) var(--ease-clay),
-                box-shadow var(--dur-base) var(--ease-out);
+    padding: 2rem 2rem 0;
+    min-height: 330px;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 1rem;
   }
-  .dash-pet-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--clay-raised-hover);
+  .dsh-hero h2 {
+    margin: 0.4rem 0 0.2rem; font-size: 1.9rem; letter-spacing: -0.02em;
   }
-  .dash-pet-card:active {
-    transform: translateY(-1px) scale(0.98);
-    box-shadow: var(--clay-pressed);
-    transition-duration: var(--dur-fast);
+  .dsh-hero .sub { color: var(--ink-soft); font-weight: 600; margin: 0 0 1.2rem; }
+  .dsh-petcard {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    border-radius: 16px; padding: 0.8rem; width: 200px;
+    box-shadow: 0 12px 30px rgba(42, 33, 83, 0.12);
   }
-  .dash-pet-photo {
-    width: 150px;
-    height: 150px;
-    margin: 0 auto 1.1rem;
-    border-radius: 50%;
-    overflow: hidden;
-    background: var(--brand-light);
-    box-shadow: 0 6px 18px rgba(31, 41, 55, 0.10), inset 0 0 0 4px #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px;
-    box-sizing: border-box;
+  .dsh-petcard .row { display: flex; gap: 0.65rem; align-items: center; margin-bottom: 0.7rem; }
+  .dsh-petcard img.thumb {
+    width: 44px; height: 44px; border-radius: 12px; object-fit: cover; background: var(--brand-light);
   }
-  .dash-pet-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;    /* shows the whole photo — nothing cropped/cut off */
-    object-position: center;
-    display: block;
-    transition: transform var(--dur-base) var(--ease-out);
+  .dsh-petcard b { display: block; font-size: 0.95rem; color: var(--navy); }
+  .dsh-petcard span { font-size: 0.74rem; color: var(--ink-soft); }
+  .dsh-petcard .btn { width: 100%; text-align: center; padding: 0.5rem; font-size: 0.82rem; }
+  .dsh-heropic {
+    align-self: end; justify-self: center;
+    max-height: 330px; max-width: 100%;
+    object-fit: contain; object-position: bottom center;
+    filter: drop-shadow(0 18px 30px rgba(42, 33, 83, 0.25));
   }
-  .dash-pet-card:hover .dash-pet-photo img { transform: scale(1.06); }
-  /* Paw-print fallback when a photo is missing */
-  .dash-pet-photo.is-fallback::after {
-    content: "🐾";
-    font-size: 3.5rem;
-    line-height: 1;
+  .dsh-heropic.fallback {
+    font-size: 7rem; line-height: 1; padding: 2rem 0 3rem; align-self: center;
+    filter: none;
   }
-  .dash-pet-card h3 { font-size: 1.15rem; margin: 0 0 0.35rem; }
-  .dash-pet-card p { font-size: 0.86rem; color: var(--ink-soft); margin: 0; }
+
+  /* Quick actions */
+  .dsh-acts {
+    background: var(--paper); border-radius: 20px; padding: 0.8rem;
+    box-shadow: var(--clay-raised); border: 1px solid rgba(139, 92, 246, 0.08);
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem;
+    margin-top: -3.2rem; position: relative; z-index: 2;
+    margin-left: 1.5rem; margin-right: 1.5rem;
+  }
+  .dsh-act {
+    display: flex; flex-direction: column; align-items: center; gap: 0.45rem;
+    padding: 0.9rem 0.5rem; border-radius: 14px; text-decoration: none;
+    color: var(--ink); font-weight: 700; font-size: 0.8rem; text-align: center;
+    transition: background var(--dur-fast) ease, transform var(--dur-base) var(--ease-clay);
+  }
+  .dsh-act:hover { background: var(--brand-light); transform: translateY(-3px); }
+  .dsh-act .ic {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--brand-light); border: 1px solid rgba(139, 92, 246, 0.22);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dsh-act .ic svg { color: var(--brand-deep); }
+
+  /* Bottom panels */
+  .dsh-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .dsh-panel {
+    background: var(--paper); border-radius: 20px; padding: 1.25rem;
+    box-shadow: var(--clay-raised); border: 1px solid rgba(139, 92, 246, 0.08);
+  }
+  .dsh-panel h3 { margin: 0 0 0.9rem; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
+  .dsh-panel h3 a { font-size: 0.78rem; color: var(--brand-deep); text-decoration: none; font-weight: 700; }
+  .dsh-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.65rem 0.75rem; border-radius: 12px; background: var(--bg);
+    margin-bottom: 0.55rem; font-size: 0.86rem;
+  }
+  .dsh-item:last-child { margin-bottom: 0; }
+  .dsh-item .ic {
+    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+    background: var(--brand-light); display: flex; align-items: center; justify-content: center;
+  }
+  .dsh-item .ic svg { color: var(--brand-deep); }
+  .dsh-item .grow { flex: 1; min-width: 0; }
+  .dsh-item b { color: var(--navy); font-size: 0.87rem; }
+  .dsh-item .sub { color: var(--ink-soft); font-size: 0.75rem; }
+  .dsh-chip {
+    padding: 0.25rem 0.7rem; border-radius: 999px; font-size: 0.72rem; font-weight: 800;
+    white-space: nowrap;
+  }
+  .dsh-chip.good { background: #E5F5EC; color: #1E7A45; }
+  .dsh-chip.bad  { background: #FBE3E3; color: #9A3A3A; }
+  .dsh-chip.info { background: var(--brand-light); color: var(--brand-deep); }
+
+  /* ---------- Right rail ---------- */
+  .dsh-rail { display: flex; flex-direction: column; gap: 1.25rem; position: sticky; top: 1.25rem; }
+  .dsh-rcard {
+    background: var(--paper); border-radius: 20px; padding: 1.25rem;
+    box-shadow: var(--clay-raised); border: 1px solid rgba(139, 92, 246, 0.08);
+  }
+  .dsh-rcard h3 { margin: 0 0 1rem; font-size: 0.98rem; }
+  .dsh-ring { display: flex; justify-content: center; margin-bottom: 0.4rem; }
+  .dsh-ring svg { transform: rotate(-90deg); }
+  .dsh-ring .track { stroke: var(--brand-light); }
+  .dsh-ring .bar { stroke: url(#dshGrad); stroke-linecap: round; transition: stroke-dashoffset 900ms var(--ease-out); }
+  .dsh-ring-wrap { position: relative; width: 132px; margin: 0 auto; }
+  .dsh-ring-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; pointer-events: none;
+  }
+  .dsh-ring-center b { font-family: var(--font-display); font-size: 1.5rem; color: var(--navy); }
+  .dsh-ring-center span { font-size: 0.68rem; color: var(--ink-soft); font-weight: 700; }
+  .dsh-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 1rem; }
+  .dsh-mini .m {
+    background: var(--bg); border-radius: 12px; padding: 0.6rem 0.3rem; text-align: center;
+  }
+  .dsh-mini b { display: block; font-family: var(--font-display); font-size: 1.05rem; color: var(--brand-deep); }
+  .dsh-mini span { font-size: 0.66rem; color: var(--ink-soft); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .dsh-tip { font-size: 0.87rem; color: var(--ink-soft); line-height: 1.65; margin: 0; }
+  .dsh-tip mark { background: var(--brand-light); color: var(--brand-deep); padding: 0 0.3rem; border-radius: 6px; font-weight: 700; }
+  .dsh-cam-note { font-size: 0.82rem; color: var(--ink-soft); margin: 0 0 0.9rem; line-height: 1.6; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1220px) {
+    .dsh-shell { grid-template-columns: 1fr; }
+    .dsh-rail { position: static; display: grid; grid-template-columns: repeat(3, 1fr); align-items: start; }
+  }
+  @media (max-width: 900px) {
+    .dsh-hero { grid-template-columns: 1fr; padding: 1.4rem 1.4rem 0; }
+    .dsh-acts { grid-template-columns: repeat(2, 1fr); margin-left: 0.5rem; margin-right: 0.5rem; }
+    .dsh-panels { grid-template-columns: 1fr; }
+    .dsh-rail { grid-template-columns: 1fr; }
+  }
 </style>
 
-<div class="card" style="background: var(--brand-light); border: none;">
-  <h1>Welcome back, {{ user.name }} 👋</h1>
-  <p style="color: var(--ink-soft); margin: 0;">Here's how things look right now.</p>
-</div>
+{% set first_pet_name = (pets.keys() | list | first) if pets else None %}
+{% set first_pet = pets[first_pet_name] if first_pet_name else None %}
 
-{% if device.food_level < 20 %}
-  <div class="flash error">⚠️ Food level is low ({{ device.food_level }}%) — refill soon.</div>
-{% endif %}
-{% if device.status == 'offline' %}
-  <div class="flash error">⚠️ Your feeder hasn't checked in recently — it may be offline.</div>
-{% endif %}
+<div class="dsh-shell">
 
-<div class="grid cols-4">
-  <div class="stat-card">
-    <div class="label">Registered Pets</div>
-    <div class="value">{{ pet_count }}</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Feeder Status</div>
-    <div class="value" style="color: {{ 'var(--status-good)' if device.status == 'online' else '#c25b5b' }};">
-      {{ 'Online' if device.status == 'online' else 'Offline' }}
+  <!-- ================= MAIN ================= -->
+  <div class="dsh-main">
+
+    <div class="dsh-head">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Welcome back, {{ user.name.split(' ')[0] }}!</p>
+      </div>
+      <a href="{{ url_for('user.feed_page') }}" class="btn btn-primary">Feed Now</a>
+    </div>
+
+    {% if device.food_level < 20 %}
+      <div class="flash error" style="margin: 0;">Food level is low ({{ device.food_level }}%) — refill soon.</div>
+    {% endif %}
+    {% if device.status != 'online' %}
+      <div class="flash error" style="margin: 0;">Your feeder hasn't checked in recently — it may be offline.</div>
+    {% endif %}
+
+    <!-- Hero -->
+    <div class="dsh-hero">
+      <div>
+        <h2>Hi {{ first_pet_name if first_pet_name else 'there' }} 💜</h2>
+        <p class="sub">Have a great day!</p>
+        {% if first_pet %}
+          <div class="dsh-petcard">
+            <div class="row">
+              <img class="thumb"
+                   src="{{ url_for('user.pet_photo', filename=first_pet.image.split('/')[-1].split('\\')[-1]) }}"
+                   alt="{{ first_pet_name }}"
+                   onerror="this.style.visibility='hidden'">
+              <div>
+                <b>{{ first_pet_name }}</b>
+                <span>{{ first_pet.type }}{% if first_pet.age %} · {{ first_pet.age }} yrs{% endif %}</span>
+              </div>
+            </div>
+            <a href="{{ url_for('user.pets_page') }}" class="btn btn-primary">View Profile</a>
+          </div>
+        {% else %}
+          <div class="dsh-petcard">
+            <div class="row"><div><b>No pets yet</b><span>Add your first companion</span></div></div>
+            <a href="{{ url_for('user.pets_page') }}" class="btn btn-primary">+ Add a Pet</a>
+          </div>
+        {% endif %}
+      </div>
+      {% if first_pet %}
+        <img class="dsh-heropic"
+             src="{{ url_for('user.pet_photo', filename=first_pet.image.split('/')[-1].split('\\')[-1]) }}"
+             alt="{{ first_pet_name }}"
+             onerror="this.outerHTML='<div class=&quot;dsh-heropic fallback&quot;>🐾</div>'">
+      {% else %}
+        <div class="dsh-heropic fallback">🐾</div>
+      {% endif %}
+    </div>
+
+    <!-- Quick actions -->
+    <div class="dsh-acts">
+      <a class="dsh-act" href="{{ url_for('user.feed_page') }}">
+        <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11h16l-1.5 8.5a2 2 0 0 1-2 1.5h-9a2 2 0 0 1-2-1.5L4 11z"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+        Feed Now
+      </a>
+      <a class="dsh-act" href="{{ url_for('user.pets_page') }}">
+        <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg></span>
+        My Pets
+      </a>
+      <a class="dsh-act" href="{{ url_for('user.ai_page') }}">
+        <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><circle cx="12" cy="12" r="3.2"/></svg></span>
+        AI Recognition
+      </a>
+      <a class="dsh-act" href="{{ url_for('user.history_page') }}">
+        <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
+        History
+      </a>
+    </div>
+
+    <!-- Panels -->
+    <div class="dsh-panels">
+      <div class="dsh-panel">
+        <h3>Recent Activity <a href="{{ url_for('user.history_page') }}">View All</a></h3>
+        {% if recent_events %}
+          {% for e in recent_events | reverse %}
+            <div class="dsh-item">
+              <span class="ic">
+                {% if e.action == 'allow_feeding' %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+                {% else %}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>
+                {% endif %}
+              </span>
+              <div class="grow">
+                <b>{{ e.pet if e.pet else 'Unknown animal' }}</b>
+                <div class="sub">{{ e.time }}</div>
+              </div>
+              {% if e.action == 'allow_feeding' %}
+                <span class="dsh-chip good">Fed</span>
+              {% else %}
+                <span class="dsh-chip bad">Skipped</span>
+              {% endif %}
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="dsh-item"><div class="grow"><b>No activity yet</b><div class="sub">Detections will appear here</div></div></div>
+        {% endif %}
+      </div>
+
+      <div class="dsh-panel">
+        <h3>Device Overview <a href="{{ url_for('user.device_page') }}">Details</a></h3>
+        <div class="dsh-item">
+          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0M12 20h.01"/></svg></span>
+          <div class="grow"><b>Feeder Status</b><div class="sub">Connection health</div></div>
+          {% if device.status == 'online' %}
+            <span class="dsh-chip good">● Online</span>
+          {% else %}
+            <span class="dsh-chip bad">● Offline</span>
+          {% endif %}
+        </div>
+        <div class="dsh-item">
+          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11h16l-1.5 8.5a2 2 0 0 1-2 1.5h-9a2 2 0 0 1-2-1.5L4 11z"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+          <div class="grow"><b>Food Level</b><div class="sub">Hopper remaining</div></div>
+          <span class="dsh-chip {{ 'bad' if device.food_level < 20 else 'info' }}">{{ device.food_level }}%</span>
+        </div>
+        <div class="dsh-item">
+          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <div class="grow"><b>Fed Today</b><div class="sub">Completed feedings</div></div>
+          <span class="dsh-chip info">{{ feedings_today }} time{{ 's' if feedings_today != 1 }}</span>
+        </div>
+        <div class="dsh-item">
+          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><circle cx="12" cy="12" r="3.2"/></svg></span>
+          <div class="grow"><b>Detections Today</b><div class="sub">Animals seen by the AI</div></div>
+          <span class="dsh-chip info">{{ detections_today }}</span>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="stat-card">
-    <div class="label">Food Level</div>
-    <div class="value">{{ device.food_level }}%</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Fed Today</div>
-    <div class="value">{{ feedings_today }}</div>
-  </div>
-</div>
 
-<h2 style="margin-top: 2rem;">Your Pets</h2>
-{% if pets %}
-  <div class="dash-pets">
-    {% for name, info in pets.items() %}
-      <div class="dash-pet-card" onclick="window.location.href='{{ url_for('user.pets_page') }}'">
-        <div class="dash-pet-photo">
-          <img src="{{ url_for('user.pet_photo', filename=info.image.split('/')[-1].split('\\')[-1]) }}" alt="{{ name }}" onerror="this.parentElement.classList.add('is-fallback'); this.remove();">
+  <!-- ================= RIGHT RAIL ================= -->
+  <div class="dsh-rail">
+    <div class="dsh-rcard">
+      <h3>Today's Activity</h3>
+      <div class="dsh-ring-wrap">
+        <div class="dsh-ring">
+          <svg width="132" height="132" viewBox="0 0 132 132">
+            <defs>
+              <linearGradient id="dshGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#C084FC"/>
+                <stop offset="100%" stop-color="#7C3AED"/>
+              </linearGradient>
+            </defs>
+            <circle class="track" cx="66" cy="66" r="54" fill="none" stroke-width="12"/>
+            <circle class="bar" cx="66" cy="66" r="54" fill="none" stroke-width="12"
+                    stroke-dasharray="339.3"
+                    stroke-dashoffset="{{ (339.3 * (1 - (device.food_level / 100))) | round(1) }}"/>
+          </svg>
         </div>
-        <h3>{{ name }}</h3>
-        <p>{{ info.type }} · Last fed: {{ info.last_fed }}</p>
+        <div class="dsh-ring-center">
+          <b>{{ device.food_level }}%</b>
+          <span>FOOD LEVEL</span>
+        </div>
       </div>
-    {% endfor %}
-  </div>
-{% else %}
-  <div class="card empty-state">
-    <p>No pets registered yet.</p>
-    <a href="{{ url_for('user.pets_page') }}" class="btn btn-primary">+ Add Your First Pet</a>
-  </div>
-{% endif %}
+      <div class="dsh-mini">
+        <div class="m"><b>{{ feedings_today }}</b><span>Fed</span></div>
+        <div class="m"><b>{{ detections_today }}</b><span>Seen</span></div>
+        <div class="m"><b>{{ pet_count }}</b><span>Pets</span></div>
+      </div>
+    </div>
 
-<div class="card" style="margin-top: 2rem;">
-  <h2>Recent Activity</h2>
-  {% if recent_events %}
-    <table>
-      <thead><tr><th>Time</th><th>Pet</th><th>Result</th></tr></thead>
-      <tbody>
-        {% for e in recent_events %}
-          <tr>
-            <td>{{ e.time }}</td>
-            <td>{{ e.pet }}</td>
-            <td>
-              {% if e.action == 'allow_feeding' %}
-                <span class="badge success">✓ Fed</span>
-              {% else %}
-                <span class="badge warning">⊘ Skipped</span>
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p class="text-muted">No activity yet. Try the AI Recognition page to run a test detection.</p>
-  {% endif %}
+    <div class="dsh-rcard">
+      <h3>Daily Tip</h3>
+      <p class="dsh-tip">Keep your pet <mark>hydrated</mark> and provide fresh water throughout the day — especially after meals from the feeder.</p>
+    </div>
+
+    <div class="dsh-rcard">
+      <h3>Live Camera</h3>
+      <p class="dsh-cam-note">Watch your feeder's camera and the AI detection feed in real time.</p>
+      <a href="{{ url_for('user.ai_page') }}" class="btn btn-primary btn-block">Open Monitor</a>
+    </div>
+  </div>
+
 </div>
-
 {% endblock %}

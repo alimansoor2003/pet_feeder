@@ -54,9 +54,12 @@
   .pet-gallery-card .pet-photo {
     width: 100%;
     aspect-ratio: 4 / 3;
-    object-fit: cover;
+    object-fit: contain;      /* whole photo visible, centered — no cropping */
+    object-position: center;
     display: block;
     background: var(--brand-light);
+    padding: 8px;
+    box-sizing: border-box;
   }
   .pet-gallery-card .pet-body {
     padding: 1.1rem 1.25rem 1.25rem;

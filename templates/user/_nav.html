@@ -1,24 +1,236 @@
 {% extends "base.html" %}
-{% block nav %}
-<div class="topnav">
-  <a href="{{ url_for('user.dashboard') }}" class="logo">🐾 PawSense</a>
-  <nav>
-    <a href="{{ url_for('user.dashboard') }}">Dashboard</a>
-    <a href="{{ url_for('user.pets_page') }}">My Pets</a>
-    <a href="{{ url_for('user.feed_page') }}">Feeding</a>
-    <a href="{{ url_for('user.ai_page') }}">AI Recognition</a>
-    <a href="{{ url_for('user.history_page') }}">History</a>
-    <a href="{{ url_for('user.device_page') }}">Device</a>
-  </nav>
-  <div class="actions">
-    <span style="color: var(--ink-soft); font-size: 0.9rem; margin-right: 0.5rem;">Hi, {{ user.name if user else '' }}</span>
-    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline">Log Out</a>
+
+{# The user area uses a sidebar shell (like the dashboard reference design),
+   so the global top nav is hidden for every user page. #}
+{% block nav %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<style>
+  /* ==========================================================================
+     User area shell — shared sidebar frame for ALL /user pages.
+     Scoped with .ush- prefix. Also upgrades .flash into proper alert cards
+     (session flashes float as toasts; in-page warnings stay in flow).
+     ========================================================================== */
+  body { background: var(--bg); }
+
+  .ush-shell {
+    display: grid;
+    grid-template-columns: 235px minmax(0, 1fr);
+    gap: 1.25rem;
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 1.25rem;
+    align-items: start;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .ush-side {
+    background: var(--paper);
+    border-radius: 22px;
+    box-shadow: var(--clay-raised);
+    border: 1px solid rgba(139, 92, 246, 0.08);
+    padding: 1.4rem 1rem;
+    position: sticky;
+    top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 2.5rem);
+  }
+  .ush-logo {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: var(--font-display); font-weight: 700; font-size: 1.15rem;
+    color: var(--navy); text-decoration: none;
+    padding: 0.25rem 0.5rem 1.2rem;
+  }
+  .ush-logo .mark {
+    width: 34px; height: 34px; border-radius: 11px;
+    background: var(--brand-light);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .ush-logo .mark svg { color: var(--brand); }
+  .ush-nav { display: flex; flex-direction: column; gap: 0.35rem; }
+  .ush-nav a {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.7rem 0.9rem; border-radius: 12px;
+    text-decoration: none; color: var(--ink-soft);
+    font-weight: 700; font-size: 0.9rem;
+    transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+  }
+  .ush-nav a svg { flex-shrink: 0; }
+  .ush-nav a:hover { background: var(--bg); color: var(--ink); }
+  .ush-nav a.active {
+    background: var(--brand-light); color: var(--brand-deep);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+  }
+  .ush-side .spacer { flex: 1; }
+  .ush-me {
+    background: var(--bg); border-radius: 16px; padding: 0.9rem;
+    display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.7rem;
+  }
+  .ush-me .av {
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #C084FC, #8B5CF6); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.9rem;
+  }
+  .ush-me b { display: block; font-size: 0.88rem; color: var(--navy); line-height: 1.2; }
+  .ush-me span { font-size: 0.74rem; color: var(--ink-soft); }
+  .ush-side .btn { font-size: 0.85rem; padding: 0.55rem 1rem; }
+
+  .ush-main { min-width: 0; }
+
+  /* ---------- Alert / flash redesign ---------- */
+  .flash {
+    position: relative;
+    display: flex; align-items: center;
+    min-height: 54px;
+    padding: 0.9rem 2.6rem 0.9rem 4rem;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(42, 33, 83, 0.12);
+    font-weight: 600; font-size: 0.9rem; color: var(--navy);
+    margin-bottom: 1.25rem;
+    animation: clay-slide-in var(--dur-slow) var(--ease-out) backwards;
+    transition: opacity 280ms ease, transform 280ms ease;
+  }
+  .flash::before {  /* tinted icon square */
+    content: ""; position: absolute; left: 0.9rem; top: 50%;
+    transform: translateY(-50%);
+    width: 36px; height: 36px; border-radius: 11px;
+  }
+  .flash::after {   /* the icon itself, drawn via mask */
+    content: ""; position: absolute; left: calc(0.9rem + 9px); top: 50%;
+    transform: translateY(-50%);
+    width: 18px; height: 18px;
+  }
+  .flash.success { border-left-color: #2E9E63; }
+  .flash.success::before { background: #E5F5EC; }
+  .flash.success::after {
+    background-color: #1E7A45;
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.1V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14l-3-3"/></svg>') center / contain no-repeat;
+    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.1V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14l-3-3"/></svg>') center / contain no-repeat;
+  }
+  .flash.error { border-left-color: #C24E4E; }
+  .flash.error::before { background: #FBE9E3; }
+  .flash.error::after {
+    background-color: #B4462B;
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>') center / contain no-repeat;
+    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>') center / contain no-repeat;
+  }
+  .flash .flash-x {
+    position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 9px; border: none;
+    background: transparent; color: var(--ink-soft);
+    font-size: 1.05rem; line-height: 1; cursor: pointer; padding: 0;
+    box-shadow: none; font-weight: 700;
+    transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+  }
+  .flash .flash-x:hover { background: var(--bg); color: var(--navy); transform: translateY(-50%); }
+  .flash.flash-hide { opacity: 0; transform: translateY(-8px); }
+
+  /* Session flashes (rendered by base.html above the shell) float as toasts */
+  .ush-toasts {
+    position: fixed !important;
+    top: 1.1rem; right: 1.1rem; z-index: 600;
+    width: min(400px, calc(100vw - 2.2rem));
+    max-width: none !important;
+    margin: 0 !important; padding: 0 !important;
+    display: flex; flex-direction: column; gap: 0.6rem;
+    pointer-events: none;
+  }
+  .ush-toasts .flash { margin: 0; pointer-events: auto; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px) {
+    .ush-shell { grid-template-columns: 1fr; padding: 0.8rem; }
+    .ush-side { position: static; min-height: 0; flex-direction: row; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+    .ush-side .spacer, .ush-me { display: none; }
+    .ush-nav { flex-direction: row; flex-wrap: wrap; }
+    .ush-logo { padding-bottom: 0.25rem; }
+  }
+</style>
+
+<div class="ush-shell">
+  <aside class="ush-side">
+    <a href="{{ url_for('user.dashboard') }}" class="ush-logo">
+      <span class="mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg>
+      </span>
+      PawSense
+    </a>
+    <nav class="ush-nav">
+      <a href="{{ url_for('user.dashboard') }}" class="{{ 'active' if request.endpoint == 'user.dashboard' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+        Dashboard
+      </a>
+      <a href="{{ url_for('user.pets_page') }}" class="{{ 'active' if request.endpoint in ('user.pets_page', 'user.edit_pet') }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="8.35" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="15.65" cy="6.2" rx="2.1" ry="2.9"/><ellipse cx="3.6" cy="11.2" rx="1.9" ry="2.6"/><ellipse cx="20.4" cy="11.2" rx="1.9" ry="2.6"/><path d="M12 10.4c-3 0-6.4 3.4-6.4 6.4 0 2 1.4 3.2 3.2 3.2 1.2 0 2.1-.5 3.2-.5s2 .5 3.2.5c1.8 0 3.2-1.2 3.2-3.2 0-3-3.4-6.4-6.4-6.4z"/></svg>
+        My Pets
+      </a>
+      <a href="{{ url_for('user.feed_page') }}" class="{{ 'active' if request.endpoint == 'user.feed_page' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11h16l-1.5 8.5a2 2 0 0 1-2 1.5h-9a2 2 0 0 1-2-1.5L4 11z"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        Feeding
+      </a>
+      <a href="{{ url_for('user.ai_page') }}" class="{{ 'active' if request.endpoint == 'user.ai_page' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><circle cx="12" cy="12" r="3.2"/></svg>
+        AI Recognition
+      </a>
+      <a href="{{ url_for('user.history_page') }}" class="{{ 'active' if request.endpoint == 'user.history_page' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        History
+      </a>
+      <a href="{{ url_for('user.device_page') }}" class="{{ 'active' if request.endpoint == 'user.device_page' }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg>
+        Device
+      </a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="ush-me">
+      <span class="av">{{ user.name[:1] | upper if user else '?' }}</span>
+      <div>
+        <b>{{ user.name if user else '' }}</b>
+        <span>Pet Parent</span>
+      </div>
+    </div>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-block">Log Out</a>
+  </aside>
+
+  <div class="ush-main">
+    {% block page_content %}{% endblock %}
   </div>
 </div>
-{% endblock %}
-{% block footer %}{% endblock %}
-{% block content %}
-<main class="app-shell">
-  {% block page_content %}{% endblock %}
-</main>
+
+<script>
+  // Session flash messages (rendered above the shell by the base layout)
+  // become floating toasts: closable, auto-dismissing.
+  document.addEventListener('DOMContentLoaded', function () {
+    var flashes = document.querySelectorAll('.flash');
+    flashes.forEach(function (f) {
+      var isToast = !f.closest('.ush-shell');
+      if (isToast && f.parentElement) {
+        f.parentElement.classList.add('ush-toasts');
+      }
+      // Close button on every alert
+      var x = document.createElement('button');
+      x.className = 'flash-x';
+      x.setAttribute('aria-label', 'Dismiss');
+      x.innerHTML = '&times;';
+      x.addEventListener('click', function () {
+        f.classList.add('flash-hide');
+        setTimeout(function () { f.remove(); }, 300);
+      });
+      f.appendChild(x);
+      // Toasts auto-dismiss after 4.5s
+      if (isToast) {
+        setTimeout(function () {
+          f.classList.add('flash-hide');
+          setTimeout(function () { f.remove(); }, 300);
+        }, 4500);
+      }
+    });
+  });
+</script>
 {% endblock %}

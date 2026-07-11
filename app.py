@@ -25,6 +25,22 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(api_bp)
 
 
+@app.context_processor
+def inject_current_user():
+    """
+    Make the logged-in user available to EVERY template as `user`.
+
+    The shared user-area sidebar (templates/user/_nav.html) shows the
+    account name/avatar on every page, but only some routes passed
+    user= explicitly — pages like My Pets rendered a '?' avatar. A
+    context processor fills the gap app-wide. Routes that already pass
+    user= explicitly are unaffected: explicit render_template kwargs
+    take precedence over context-processor values.
+    """
+    import auth
+    return {"user": auth.current_user()}
+
+
 @app.route("/")
 def landing():
     """Public marketing homepage: mission, product, how it works."""
