@@ -3,7 +3,44 @@
 {% block page_content %}
 
 <h1>Devices</h1>
+
+<div class="card" style="margin-bottom:1.5rem;">
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+    <div>
+      <h2>Factory Inventory</h2>
+      <p class="text-muted" style="margin:0;">Provision a Device ID + Setup Key for each feeder you build. Print both on the unit's sticker and flash them into its ESP32 (the Setup Key is its <code>X-API-Key</code>). Customers connect from their own dashboard using the sticker.</p>
+    </div>
+    <form method="POST" action="{{ url_for('admin.provision_device') }}">
+      <button type="submit" class="btn btn-primary" style="white-space:nowrap;">+ Provision New Device</button>
+    </form>
+  </div>
+  {% if provisioned %}
+    <table style="margin-top:1rem;">
+      <thead><tr><th>Device ID</th><th>Setup Key (sticker)</th><th>Claimed By</th><th>Provisioned</th></tr></thead>
+      <tbody>
+        {% for p in provisioned %}
+          <tr>
+            <td><code>{{ p.device_id }}</code></td>
+            <td><code>{{ p.setup_key }}</code></td>
+            <td>
+              {% if p.owner_email %}
+                {{ p.owner_email }} <span style="font-size:0.78rem; color:var(--ink-soft);">({{ p.claimed_at }})</span>
+              {% else %}
+                <span class="badge">unclaimed</span>
+              {% endif %}
+            </td>
+            <td style="font-size:0.82rem; color:var(--ink-soft);">{{ p.created_at }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state" style="margin-top:1rem;"><p>No devices provisioned yet — click the button to mint your first sticker.</p></div>
+  {% endif %}
+</div>
+
 <div class="card">
+  <h2>Customer Devices</h2>
   <table>
     <thead><tr><th>Device ID</th><th>Owner</th><th>Status</th><th>Food Level</th><th>Last Connection</th></tr></thead>
     <tbody>

@@ -38,6 +38,11 @@ from datetime import datetime, timedelta
 
 DEVICE_OFFLINE_AFTER_MINUTES = 10
 
+# Global registry of factory-provisioned feeders (the "sticker" pool).
+# Lives in data/ so it's never committed to git — it holds setup keys.
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+REGISTRY_PATH = os.path.join(APP_ROOT, "data", "provisioned_devices.json")
+
 
 def _load(path: str) -> dict:
     try:
@@ -161,6 +166,133 @@ def pop_pending_feed(device_path: str) -> bool:
 
 def acknowledge_feed(device_path: str, log_path: str) -> None:
     _log_device_event(log_path, "Feed command executed and acknowledged by device")
+
+
+# ============================================================================
+# Factory provisioning + sticker-based claiming
+# ============================================================================
+#
+# Business flow for real hardware:
+#   1. Admin clicks "Provision new device" -> a Device ID + Setup Key pair
+#      is minted here and shown once for printing on the unit's sticker.
+#      The same pair is flashed into the ESP32 firmware (the Setup Key IS
+#      the device's X-API-Key).
+#   2. The customer signs up, goes to their Device page, and types the two
+#      values from the sticker. claim_device() binds that feeder to their
+#      account — their device.json takes on the provisioned identity, so
+#      the ESP32's API calls resolve to them from that moment on.
+#   3. A feeder can only be claimed while unclaimed. Someone who reads the
+#      sticker of an already-connected feeder cannot hijack it.
+
+
+def _load_registry() -> dict:
+    try:
+        with open(REGISTRY_PATH, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _save_registry(registry: dict) -> None:
+    os.makedirs(os.path.dirname(REGISTRY_PATH), exist_ok=True)
+    with open(REGISTRY_PATH, "w") as f:
+        json.dump(registry, f, indent=2)
+
+
+def _format_setup_key(raw_hex: str) -> str:
+    """Sticker-friendly: uppercase hex in groups of 4, e.g. A1B2-C3D4-E5F6."""
+    raw_hex = raw_hex.upper()
+    return "-".join(raw_hex[i:i + 4] for i in range(0, len(raw_hex), 4))
+
+
+def normalize_setup_key(typed: str) -> str:
+    """Forgives how customers type the sticker key: spaces, missing dashes,
+    lowercase all become the canonical A1B2-C3D4-E5F6 form."""
+    cleaned = "".join(c for c in typed.upper() if c.isalnum())
+    return _format_setup_key(cleaned)
+
+
+def provision_device() -> dict:
+    """Admin action: mint a new factory device for sticker printing."""
+    registry = _load_registry()
+    entry = {
+        "device_id": "dev_" + secrets.token_hex(6),
+        "setup_key": _format_setup_key(secrets.token_hex(6)),
+        "created_at": datetime.now().isoformat(timespec="seconds"),
+        "claimed_by": None,
+        "claimed_at": None,
+    }
+    registry[entry["device_id"]] = entry
+    _save_registry(registry)
+    return entry
+
+
+def list_provisioned() -> list:
+    """For the admin Devices page: every minted device, newest first."""
+    import auth
+    rows = []
+    for entry in _load_registry().values():
+        owner = auth.get_user_by_id(entry["claimed_by"]) if entry["claimed_by"] else None
+        rows.append({**entry, "owner_email": owner["email"] if owner else None})
+    return sorted(rows, key=lambda e: e["created_at"], reverse=True)
+
+
+def claim_device(user_id: str, device_path: str, device_id: str, setup_key: str):
+    """
+    Customer action: bind the feeder on the sticker to this account.
+    Returns (device_dict, error_message) — error_message is None on success.
+    """
+    device_id = device_id.strip().lower()
+    setup_key = normalize_setup_key(setup_key)
+
+    registry = _load_registry()
+    entry = registry.get(device_id)
+    # Same message for "no such device" and "wrong key", so the form can't
+    # be used to probe which IDs exist.
+    if entry is None or entry["setup_key"] != setup_key:
+        return None, "Device ID and Setup Key don't match. Check the sticker on your feeder and try again."
+    if entry["claimed_by"] and entry["claimed_by"] != user_id:
+        return None, "This feeder is already connected to another account. Disconnect it there first, or contact support."
+
+    entry["claimed_by"] = user_id
+    entry["claimed_at"] = datetime.now().isoformat(timespec="seconds")
+    _save_registry(registry)
+
+    # The user's device record takes on the provisioned identity. The
+    # setup key doubles as the API key the ESP32 sends in X-API-Key.
+    old = _load(device_path)
+    device = {
+        "device_id": entry["device_id"],
+        "api_key": entry["setup_key"],
+        "provisioned": True,
+        "status": "offline",
+        "food_level": 100,
+        "last_connection": None,
+        "pending_feed": False,
+    }
+    if old.get("feeding_schedule"):
+        device["feeding_schedule"] = old["feeding_schedule"]
+    _save(device_path, device)
+    return device, None
+
+
+def unclaim_device(user_id: str, device_path: str) -> None:
+    """Customer action: disconnect their feeder. Frees the registry entry
+    so the sticker can be used to claim it again (e.g. after reselling),
+    and gives the account a fresh placeholder device record."""
+    device = _load(device_path)
+    registry = _load_registry()
+    entry = registry.get(device.get("device_id"))
+    if entry and entry["claimed_by"] == user_id:
+        entry["claimed_by"] = None
+        entry["claimed_at"] = None
+        _save_registry(registry)
+
+    schedule = device.get("feeding_schedule")
+    fresh = create_default_device(device_path)
+    if schedule:
+        fresh["feeding_schedule"] = schedule
+        _save(device_path, fresh)
 
 
 def list_all_devices() -> list:

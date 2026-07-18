@@ -381,3 +381,35 @@ def device_page():
     device = devices.get_device(paths["device"])
     device_events = _parse_events_log(paths["device_events_log"])
     return render_template("user/device.html", device=device, device_events=device_events[-20:])
+
+
+@bp.route("/device/connect", methods=["POST"])
+@auth.login_required
+def connect_device():
+    """Claim a physical feeder using the Device ID + Setup Key printed on
+    the sticker on the unit. No admin involvement needed."""
+    user = auth.current_user()
+    paths = auth.user_paths(user["id"])
+
+    device_id = request.form.get("device_id", "").strip()
+    setup_key = request.form.get("setup_key", "").strip()
+    if not device_id or not setup_key:
+        flash("Both the Device ID and the Setup Key from the sticker are required.", "error")
+        return redirect(url_for("user.device_page"))
+
+    device, error = devices.claim_device(user["id"], paths["device"], device_id, setup_key)
+    if error:
+        flash(error, "error")
+    else:
+        flash(f"✓ Feeder {device['device_id']} is now connected to your account!")
+    return redirect(url_for("user.device_page"))
+
+
+@bp.route("/device/disconnect", methods=["POST"])
+@auth.login_required
+def disconnect_device():
+    user = auth.current_user()
+    paths = auth.user_paths(user["id"])
+    devices.unclaim_device(user["id"], paths["device"])
+    flash("Feeder disconnected. You can reconnect it any time with the sticker on the device.")
+    return redirect(url_for("user.device_page"))

@@ -128,7 +128,23 @@ def delete_user(email):
 @bp.route("/devices")
 @auth.role_required("admin")
 def devices_page():
-    return render_template("admin/devices.html", devices=devices.list_all_devices())
+    return render_template(
+        "admin/devices.html",
+        devices=devices.list_all_devices(),
+        provisioned=devices.list_provisioned(),
+    )
+
+
+@bp.route("/devices/provision", methods=["POST"])
+@auth.role_required("admin")
+def provision_device():
+    """Factory step: mint a Device ID + Setup Key pair for a new feeder.
+    Print both on the unit's sticker and flash them into its ESP32
+    (the Setup Key is sent as the X-API-Key header)."""
+    entry = devices.provision_device()
+    flash(f"✓ New feeder provisioned — print this on the sticker: "
+          f"Device ID {entry['device_id']} · Setup Key {entry['setup_key']}")
+    return redirect(url_for("admin.devices_page"))
 
 
 # ============================================================================

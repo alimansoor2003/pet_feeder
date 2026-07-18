@@ -2,6 +2,27 @@
 {% block title %}Device — PawSense{% endblock %}
 {% block page_content %}
 
+{% if not device.provisioned %}
+
+<div class="card" style="max-width:560px; margin:0 auto;">
+  <h2>Connect Your Feeder</h2>
+  <p class="text-muted">Enter the two codes printed on the sticker on the bottom of your PawSense feeder. Once connected, you control it from this dashboard — feed button, schedules, and live status.</p>
+  <form method="POST" action="{{ url_for('user.connect_device') }}">
+    <div class="form-group">
+      <label>Device ID</label>
+      <input type="text" name="device_id" placeholder="dev_a1b2c3d4e5f6" required>
+    </div>
+    <div class="form-group">
+      <label>Setup Key</label>
+      <input type="text" name="setup_key" placeholder="A1B2-C3D4-E5F6" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Connect Feeder</button>
+  </form>
+  <p style="font-size:0.8rem; color:var(--ink-soft); margin-top:0.75rem;">Don't have a feeder yet? Your account works without one — you can register pets and try the AI recognition while you wait for delivery.</p>
+</div>
+
+{% else %}
+
 <div class="grid cols-2">
   <div class="card">
     <h2>Feeder Hardware</h2>
@@ -18,19 +39,21 @@
   </div>
 
   <div class="card">
-    <h2>ESP32 Setup</h2>
-    <p class="text-muted">Use these credentials in your ESP32 firmware to connect this feeder to your account.</p>
+    <h2>Connected Feeder</h2>
+    <p class="text-muted">This feeder is linked to your account. Only you can control it — the sticker codes can't be used to claim it while it's connected.</p>
     <div class="form-group">
       <label>Device ID</label>
       <input type="text" value="{{ device.device_id }}" readonly>
     </div>
-    <div class="form-group">
-      <label>API Key</label>
-      <input type="text" value="{{ device.api_key }}" readonly>
-    </div>
-    <p style="font-size:0.8rem; color:var(--ink-soft);">Keep the API key private — it lets your feeder report sensor data and receive feed commands. See the README for the full ESP32 HTTP contract.</p>
+    <form method="POST" action="{{ url_for('user.disconnect_device') }}"
+          onsubmit="return confirm('Disconnect this feeder? It will stop responding to your dashboard until reconnected with the sticker codes.');">
+      <button type="submit" class="btn" style="background:var(--danger, #d9534f); color:#fff;">Disconnect Feeder</button>
+    </form>
+    <p style="font-size:0.8rem; color:var(--ink-soft); margin-top:0.75rem;">Disconnect if you're selling or gifting the feeder — that frees it so the next owner can connect with the same sticker.</p>
   </div>
 </div>
+
+{% endif %}
 
 <div class="card" style="margin-top:1.5rem;">
   <h2>Recent Device Events</h2>
