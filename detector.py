@@ -3,7 +3,7 @@ detector.py
 -----------
 Single responsibility: run YOLO object detection and report whether
 a dog or cat is present in a given image.
-
+ 
 This module knows NOTHING about pet identity, the database, or the web
 layer. It only answers: "is there a dog/cat in this image, and if so,
 where exactly?" Everything else (matching, feeding decisions, web
