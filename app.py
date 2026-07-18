@@ -9,10 +9,15 @@ by who's allowed to use them:
   routes/api_routes.py    - ESP32 hardware contract, /api/device/*  (device API key, not a user login)
 """
 
+import os
+
 from flask import Flask, redirect, render_template, url_for
 
 app = Flask(__name__)
-app.secret_key = "dev-secret-key-change-in-production"  # replace before real deployment
+# Session-signing key. Production MUST set the SECRET_KEY environment
+# variable — the fallback below is only for local development, and
+# anyone who knows it can forge login sessions.
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
 
 from routes.auth_routes import bp as auth_bp
 from routes.user_routes import bp as user_bp
@@ -66,4 +71,10 @@ if __name__ == "__main__":
     print("✓ Admin dashboard:     http://localhost:5000/admin/dashboard")
     print("✓ ESP32 API base:      http://localhost:5000/api/device/<device_id>/...")
     print("=" * 60 + "\n")
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    # Debug mode (auto-reload + in-browser debugger) is opt-in via
+    # FLASK_DEBUG=1. Never enable it on a deployed server: the Werkzeug
+    # debugger lets anyone who reaches the page run arbitrary code.
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
+    if not debug:
+        print("  (dev tip: set FLASK_DEBUG=1 for auto-reload)")
+    app.run(debug=debug, host="0.0.0.0", port=5000)
