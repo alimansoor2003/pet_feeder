@@ -29,43 +29,6 @@ def _allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def _strip_background(save_path):
-    """
-    Generates a background-removed DISPLAY copy of an uploaded pet photo,
-    saved next to the original as '{stem}_nobg.png' (PNG keeps transparency).
-
-    Design decisions:
-    - The ORIGINAL photo is kept untouched, because the AI recognition
-      pipeline computes its reference embedding from it. Cutting the
-      background could shift those embeddings and change match scores,
-      so the AI keeps seeing exactly what was uploaded.
-    - The pet_photo route prefers the _nobg copy when it exists, so the
-      site displays the clean cut-out automatically.
-    - Everything is wrapped in try/except: if rembg isn't installed or
-      the model fails, uploading still works — the original photo is
-      simply shown instead. A missing nice-to-have must never block
-      pet registration.
-
-    First call downloads rembg's U2-Net model (~170 MB) to the user's
-    home directory, so the very first upload can take a while.
-    """
-    try:
-        from rembg import remove  # imported lazily: optional dependency
-        from PIL import Image
-
-        with Image.open(save_path) as img:
-            cut = remove(img)
-
-        stem = os.path.splitext(save_path)[0]
-        nobg_path = f"{stem}_nobg.png"
-        cut.save(nobg_path)
-        return nobg_path
-    except Exception as e:
-        print(f"[pets] Background removal skipped ({type(e).__name__}: {e}) — "
-              f"original photo will be shown instead.")
-        return None
-
-
 @bp.route("/pet-photo/<filename>")
 @auth.login_required
 def pet_photo(filename):
@@ -93,14 +56,6 @@ def pet_photo(filename):
     # Reject anything that escaped the uploads directory, or doesn't exist.
     if not full_path.startswith(uploads_dir + os.sep) or not os.path.isfile(full_path):
         abort(404)
-
-    # Prefer the background-removed display copy when one was generated
-    # (created at upload time by _strip_background). Falls back to the
-    # original automatically if removal wasn't possible.
-    stem = os.path.splitext(full_path)[0]
-    nobg_path = f"{stem}_nobg.png"
-    if os.path.isfile(nobg_path):
-        return send_file(nobg_path)
 
     return send_file(full_path)
 
@@ -210,7 +165,6 @@ def pets_page():
         filename = secure_filename(f"{name.lower()}_{image_file.filename}")
         save_path = os.path.join(paths["uploads"], filename)
         image_file.save(save_path)
-        _strip_background(save_path)  # display copy without background (best-effort)
         rel_path = os.path.relpath(save_path, APP_ROOT)
 
         pets.add_pet(paths["database"], name, rel_path, pet_type, age, weight, feeding_amount)
@@ -244,7 +198,6 @@ def edit_pet(name):
             filename = secure_filename(f"{name.lower()}_{image_file.filename}")
             save_path = os.path.join(paths["uploads"], filename)
             image_file.save(save_path)
-            _strip_background(save_path)  # display copy without background (best-effort)
             rel_path = os.path.relpath(save_path, APP_ROOT)
 
         pets.update_pet(paths["database"], name, pet_type, age, weight, feeding_amount, rel_path)
