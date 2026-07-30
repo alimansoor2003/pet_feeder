@@ -17,6 +17,7 @@ __pycache__/
 *.egg-info/
 .Python
 venv/
+.venv/
 env/
 
 # Environment variables
@@ -31,3 +32,4 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+uploads/
