@@ -13,6 +13,11 @@ trust boundary for "who can create an admin."
 """
 
 import getpass
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import auth
 
 
@@ -33,8 +38,7 @@ def main():
         return
 
     import devices
-    paths = auth.user_paths(user["id"])
-    devices.create_default_device(paths["device"])
+    devices.create_default_device(user["id"])
 
     print(f"\n✓ Admin account created: {user['email']} (role={user['role']})")
     print("  You can now log in at /login and you'll be sent to /admin/dashboard.")

@@ -41,63 +41,57 @@ bp = Blueprint("api", __name__, url_prefix="/api/device")
 
 
 def _authenticate(device_id):
-    """Returns (user_id, device, device_path) or (None, None, None) with
-    the appropriate HTTP status already decided by the caller."""
-    user_id, device, device_path = devices.find_device_by_id(device_id)
+    """Returns (user_id, device) or (None, None) with the appropriate
+    HTTP status already decided by the caller."""
+    user_id, device = devices.find_device_by_id(device_id)
     if device is None:
-        return None, None, None, 404
+        return None, None, 404
 
     api_key = request.headers.get("X-API-Key", "")
     if not devices.verify_api_key(device, api_key):
-        return None, None, None, 401
+        return None, None, 401
 
-    return user_id, device, device_path, 200
+    return user_id, device, 200
 
 
 @bp.route("/<device_id>/heartbeat", methods=["POST"])
 def heartbeat(device_id):
-    import auth
-    user_id, device, device_path, status = _authenticate(device_id)
+    user_id, device, status = _authenticate(device_id)
     if status != 200:
         return jsonify({"error": "unauthorized" if status == 401 else "not found"}), status
 
-    paths = auth.user_paths(user_id)
-    devices.record_heartbeat(device_path, paths["device_events_log"])
+    devices.record_heartbeat(user_id)
     return jsonify({"status": "ok"})
 
 
 @bp.route("/<device_id>/data", methods=["POST"])
 def push_data(device_id):
-    import auth
-    user_id, device, device_path, status = _authenticate(device_id)
+    user_id, device, status = _authenticate(device_id)
     if status != 200:
         return jsonify({"error": "unauthorized" if status == 401 else "not found"}), status
 
     payload = request.get_json(silent=True) or {}
     food_level = payload.get("food_level")
 
-    paths = auth.user_paths(user_id)
-    updated = devices.record_sensor_data(device_path, paths["device_events_log"], food_level=food_level)
+    updated = devices.record_sensor_data(user_id, food_level=food_level)
     return jsonify({"status": "ok", "food_level": updated.get("food_level")})
 
 
 @bp.route("/<device_id>/commands", methods=["GET"])
 def get_commands(device_id):
-    user_id, device, device_path, status = _authenticate(device_id)
+    user_id, device, status = _authenticate(device_id)
     if status != 200:
         return jsonify({"error": "unauthorized" if status == 401 else "not found"}), status
 
-    should_feed = devices.pop_pending_feed(device_path)
+    should_feed = devices.pop_pending_feed(user_id)
     return jsonify({"feed": should_feed})
 
 
 @bp.route("/<device_id>/ack", methods=["POST"])
 def acknowledge(device_id):
-    import auth
-    user_id, device, device_path, status = _authenticate(device_id)
+    user_id, device, status = _authenticate(device_id)
     if status != 200:
         return jsonify({"error": "unauthorized" if status == 401 else "not found"}), status
 
-    paths = auth.user_paths(user_id)
-    devices.acknowledge_feed(device_path, paths["device_events_log"])
+    devices.acknowledge_feed(user_id)
     return jsonify({"status": "ok"})

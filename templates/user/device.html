@@ -61,7 +61,7 @@
     <table>
       <tbody>
         {% for e in device_events %}
-          <tr><td style="font-size:0.85rem;">{{ e }}</td></tr>
+          <tr><td style="font-size:0.85rem;">[{{ e.timestamp }}] {{ e.message }}</td></tr>
         {% endfor %}
       </tbody>
     </table>

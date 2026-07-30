@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: pawsense
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python serve.py
+    envVars:
+      # Set this by hand in the Render dashboard after creating a free
+      # Postgres database on Neon or Supabase (see README) — Render's own
+      # free Postgres tier auto-deletes after ~30 days, so it's not wired
+      # up here via fromDatabase.
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true

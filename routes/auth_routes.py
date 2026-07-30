@@ -9,8 +9,6 @@ Signup never accepts a role field from the form — auth.create_user()
 always defaults to role="user" unless called by create_admin.py.
 """
 
-import os
-
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
 import auth
@@ -35,8 +33,7 @@ def signup():
             flash(error, "error")
             return redirect(url_for("auth.signup"))
 
-        paths = auth.user_paths(user["id"])
-        devices.create_default_device(paths["device"])
+        devices.create_default_device(user["id"])
 
         session["user_id"] = user["id"]
         flash(f"Welcome, {user['name']}! Your account is ready.")

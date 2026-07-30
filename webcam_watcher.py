@@ -42,8 +42,11 @@ import time
 from datetime import datetime
 
 import cv2
+from dotenv import load_dotenv
 from flask import Flask, Response
 from PIL import Image
+
+load_dotenv()
 
 import auth
 import devices
@@ -62,11 +65,10 @@ stream_app = Flask(__name__)
 
 
 def get_user_by_email(email: str):
-    users = auth._load_users()
-    return users.get(email.strip().lower())
+    return auth.get_user_by_email(email)
 
 
-def capture_loop(paths: dict):
+def capture_loop(user_id: str):
     """
     Runs forever in a background thread. Grabs frames continuously (so the
     live preview stays smooth) and runs the AI pipeline only every
@@ -102,24 +104,24 @@ def capture_loop(paths: dict):
             now = time.time()
             if now - last_detection_time >= CAPTURE_INTERVAL_SECONDS:
                 last_detection_time = now
-                run_detection(frame, paths)
+                run_detection(frame, user_id)
 
     finally:
         cap.release()
 
 
-def run_detection(frame, paths: dict):
+def run_detection(frame, user_id: str):
     """One AI pipeline pass on a single already-captured frame."""
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     image = Image.fromarray(rgb_frame)
 
-    result = pipeline(image, database_path=paths["database"], log_path=paths["events_log"])
+    result = pipeline(image, user_id=user_id)
 
     timestamp = datetime.now().strftime("%H:%M:%S")
     if result.get("pet") and result["pet"] != "Unknown":
         print(f"[{timestamp}] Detected: {result['pet']} (score {result['score']}) -> {result['action']}")
         if result["action"] == "allow_feeding":
-            devices.queue_feed_command(paths["device"], paths["device_events_log"])
+            devices.queue_feed_command(user_id)
             print(f"[{timestamp}] -> Feed command queued. ESP32 will pick it up on its next poll.")
     elif result.get("animal") == "none":
         print(f"[{timestamp}] No animal in frame.")
@@ -165,13 +167,12 @@ def main():
         print(f"✗ No account found for '{email}'. Sign up at /signup first.")
         sys.exit(1)
 
-    paths = auth.user_paths(user["id"])
     print(f"✓ Watching webcam for user: {user['name']} ({user['email']})")
     print(f"  Running AI detection every {CAPTURE_INTERVAL_SECONDS}s from camera index {CAMERA_INDEX}")
     print(f"  Live preview available at: http://localhost:{STREAM_PORT}/video_feed")
     print("  Press Ctrl+C to stop.\n")
 
-    capture_thread = threading.Thread(target=capture_loop, args=(paths,), daemon=True)
+    capture_thread = threading.Thread(target=capture_loop, args=(user["id"],), daemon=True)
     capture_thread.start()
 
     # Flask's dev server logging is noisy for a simple video stream — quiet it down

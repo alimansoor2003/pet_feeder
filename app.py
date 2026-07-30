@@ -11,7 +11,18 @@ by who's allowed to use them:
 
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()  # local dev only: reads .env into os.environ if present; a no-op in
+                # hosts (Render/Railway/...) that inject real env vars directly.
+
 from flask import Flask, redirect, render_template, url_for
+
+import db
+
+# Creates any missing tables; safe to call on every startup (CREATE TABLE
+# IF NOT EXISTS). Requires DATABASE_URL to be set — see db.py.
+db.init_db()
 
 app = Flask(__name__)
 # Session-signing key. Production MUST set the SECRET_KEY environment

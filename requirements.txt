@@ -7,3 +7,5 @@ numpy
 opencv-python
 timm
 waitress
+psycopg[binary,pool]
+python-dotenv

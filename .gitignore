@@ -1,10 +1,14 @@
 # User data (SENSITIVE - NEVER PUSH)
+# Structured data (users/pets/devices/events) now lives in Postgres, not
+# here — data/ only holds each user's uploaded pet photos. The root-level
+# users.json/database.json/feeding_log.json are pre-migration leftovers
+# (users.json still has real password hashes) — keep them ignored until
+# they're deleted.
+data/
+*.log
 users.json
 database.json
 feeding_log.json
-data/
-*.log
-events.log
 
 # Python
 __pycache__/

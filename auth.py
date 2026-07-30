@@ -14,62 +14,42 @@ Every user has a status field: "active" or "blocked".
 - Blocked accounts keep all their data (pets, photos, history).
 - Admins can unblock or permanently delete accounts.
 
-Stores users in users.json:
-{
-  "alice@example.com": {
-      "id": "u_3f2c...",
-      "name": "Alice",
-      "email": "alice@example.com",
-      "password_hash": "...",
-      "role": "user",
-      "status": "active",
-      "created_at": "2026-06-23T10:00:00"
-  }
-}
-
-Each user gets their own data folder: data/<user_id>/
-  data/<user_id>/database.json       (their pets)
-  data/<user_id>/feeding_log.json    (their feeding history)
-  data/<user_id>/device.json         (their feeder hardware record)
-  data/<user_id>/events.log          (detection/feeding events)
-  data/<user_id>/device_events.log   (device heartbeats/commands)
-  data/<user_id>/uploads/            (pet photos)
+Users, pets, devices, and event history all live in Postgres (see db.py).
+The one thing still stored on local disk is each user's own uploaded pet
+photos, under data/<user_id>/uploads/ — deleting a user's account removes
+that folder as well as their database rows.
 """
 
-import json
 import os
 import secrets
 import shutil
-from datetime import datetime
 from functools import wraps
 
 from flask import abort, flash, redirect, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
+import db
+
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-USERS_PATH = os.path.join(APP_ROOT, "users.json")
 DATA_ROOT = os.path.join(APP_ROOT, "data")
 
 VALID_ROLES = ("user", "admin")
 
 os.makedirs(DATA_ROOT, exist_ok=True)
 
-if not os.path.exists(USERS_PATH):
-    with open(USERS_PATH, "w") as f:
-        json.dump({}, f)
 
-
-def _load_users() -> dict:
-    with open(USERS_PATH, "r") as f:
-        return json.load(f)
-
-
-def _save_users(users: dict) -> None:
-    with open(USERS_PATH, "w") as f:
-        json.dump(users, f, indent=2)
+def _row_to_user(row) -> dict:
+    """Templates/routes expect created_at as an ISO string (how it always
+    looked coming out of users.json) — Postgres hands back a datetime."""
+    user = dict(row)
+    if user.get("created_at") is not None:
+        user["created_at"] = user["created_at"].isoformat()
+    return user
 
 
 def _user_data_dir(user_id: str) -> str:
+    """Only pet photo uploads live on local disk now; everything else
+    (users, pets, devices, event history) is in Postgres."""
     path = os.path.join(DATA_ROOT, user_id)
     os.makedirs(os.path.join(path, "uploads"), exist_ok=True)
     return path
@@ -94,30 +74,25 @@ def create_user(name: str, email: str, password: str, role: str = "user"):
     if role not in VALID_ROLES:
         role = "user"
 
-    users = _load_users()
-    if email in users:
-        return None, "An account with that email already exists."
-
     user_id = "u_" + secrets.token_hex(8)
-    user = {
-        "id": user_id,
-        "name": name.strip(),
-        "email": email,
-        "password_hash": generate_password_hash(password),
-        "role": role,
-        "status": "active",
-        "created_at": datetime.now().isoformat(),
-    }
-    users[email] = user
-    _save_users(users)
+    password_hash = generate_password_hash(password)
 
-    user_dir = _user_data_dir(user_id)
-    with open(os.path.join(user_dir, "database.json"), "w") as f:
-        json.dump({}, f)
-    with open(os.path.join(user_dir, "feeding_log.json"), "w") as f:
-        json.dump({}, f)
+    with db.get_conn() as conn:
+        exists = conn.execute("SELECT 1 FROM users WHERE email = %s", (email,)).fetchone()
+        if exists:
+            return None, "An account with that email already exists."
 
-    return user, None
+        row = conn.execute(
+            """
+            INSERT INTO users (id, email, name, password_hash, role, status)
+            VALUES (%s, %s, %s, %s, %s, 'active')
+            RETURNING id, email, name, password_hash, role, status, created_at
+            """,
+            (user_id, email, name.strip(), password_hash, role),
+        ).fetchone()
+
+    _user_data_dir(user_id)
+    return _row_to_user(row), None
 
 
 def verify_login(email: str, password: str):
@@ -130,27 +105,34 @@ def verify_login(email: str, password: str):
     from the account owner; they need to know to contact support.
     """
     email = email.strip().lower()
-    users = _load_users()
-    user = users.get(email)
-    if not user or not check_password_hash(user["password_hash"], password):
+    with db.get_conn() as conn:
+        row = conn.execute("SELECT * FROM users WHERE email = %s", (email,)).fetchone()
+
+    if not row or not check_password_hash(row["password_hash"], password):
         return None, "Incorrect email or password."
-    if user.get("status", "active") == "blocked":
+    if row["status"] == "blocked":
         return None, "Your account has been blocked. Please contact support for more information."
-    return user, None
+    return _row_to_user(row), None
 
 
 def get_user_by_id(user_id: str):
-    users = _load_users()
-    for user in users.values():
-        if user["id"] == user_id:
-            return user
-    return None
+    with db.get_conn() as conn:
+        row = conn.execute("SELECT * FROM users WHERE id = %s", (user_id,)).fetchone()
+    return _row_to_user(row) if row else None
+
+
+def get_user_by_email(email: str):
+    email = email.strip().lower()
+    with db.get_conn() as conn:
+        row = conn.execute("SELECT * FROM users WHERE email = %s", (email,)).fetchone()
+    return _row_to_user(row) if row else None
 
 
 def list_all_users() -> list:
     """For admin views: every user, sorted by signup date."""
-    users = _load_users()
-    return sorted(users.values(), key=lambda u: u.get("created_at", ""))
+    with db.get_conn() as conn:
+        rows = conn.execute("SELECT * FROM users ORDER BY created_at ASC").fetchall()
+    return [_row_to_user(r) for r in rows]
 
 
 def block_user(email: str, acting_admin_email: str = None) -> tuple:
@@ -165,42 +147,41 @@ def block_user(email: str, acting_admin_email: str = None) -> tuple:
     if acting_admin_email and email == acting_admin_email.strip().lower():
         return False, "You can't block your own account."
 
-    users = _load_users()
-    if email not in users:
-        return False, "User not found."
-    users[email]["status"] = "blocked"
-    _save_users(users)
+    with db.get_conn() as conn:
+        result = conn.execute("UPDATE users SET status = 'blocked' WHERE email = %s", (email,))
+        if result.rowcount == 0:
+            return False, "User not found."
     return True, None
 
 
 def unblock_user(email: str) -> tuple:
     email = email.strip().lower()
-    users = _load_users()
-    if email not in users:
-        return False, "User not found."
-    users[email]["status"] = "active"
-    _save_users(users)
+    with db.get_conn() as conn:
+        result = conn.execute("UPDATE users SET status = 'active' WHERE email = %s", (email,))
+        if result.rowcount == 0:
+            return False, "User not found."
     return True, None
 
 
 def delete_user(email: str, acting_admin_email: str = None) -> tuple:
     """
-    Permanently removes the account AND all their data (pets, photos,
-    logs, device record). This is destructive and irreversible — the
-    route calling this should always confirm with the admin first.
+    Permanently removes the account AND all their data (pets, device,
+    event history via ON DELETE CASCADE, plus their uploaded photos on
+    disk). This is destructive and irreversible — the route calling this
+    should always confirm with the admin first.
     """
     email = email.strip().lower()
     if acting_admin_email and email == acting_admin_email.strip().lower():
         return False, "You can't delete your own account."
 
-    users = _load_users()
-    if email not in users:
-        return False, "User not found."
+    with db.get_conn() as conn:
+        row = conn.execute("SELECT id FROM users WHERE email = %s", (email,)).fetchone()
+        if not row:
+            return False, "User not found."
+        user_id = row["id"]
+        conn.execute("DELETE FROM users WHERE email = %s", (email,))
 
-    user = users.pop(email)
-    _save_users(users)
-
-    user_dir = os.path.join(DATA_ROOT, user["id"])
+    user_dir = os.path.join(DATA_ROOT, user_id)
     if os.path.exists(user_dir):
         shutil.rmtree(user_dir)
 
@@ -208,15 +189,11 @@ def delete_user(email: str, acting_admin_email: str = None) -> tuple:
 
 
 def user_paths(user_id: str) -> dict:
-    """File paths this user's pages/pipeline should read and write."""
+    """Local-disk paths this user's pages/pipeline should read and write —
+    just the uploads folder now; everything else lives in Postgres."""
     user_dir = _user_data_dir(user_id)
     return {
         "dir": user_dir,
-        "database": os.path.join(user_dir, "database.json"),
-        "feeding_log": os.path.join(user_dir, "feeding_log.json"),
-        "device": os.path.join(user_dir, "device.json"),
-        "events_log": os.path.join(user_dir, "events.log"),
-        "device_events_log": os.path.join(user_dir, "device_events.log"),
         "uploads": os.path.join(user_dir, "uploads"),
     }
 

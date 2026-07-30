@@ -8,13 +8,13 @@ admins have their own separate blueprint and never need these pages.
 
 import os
 import re
-from datetime import datetime, date
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, send_file, url_for
 from werkzeug.utils import secure_filename
 
 import auth
 import devices
+import events
 import pets
 from input_adapter import normalize_input
 from pipeline import pipeline
@@ -60,42 +60,9 @@ def pet_photo(filename):
     return send_file(full_path)
 
 
-def _load_feeding_log(path):
-    import json
-    try:
-        with open(path, "r") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-
-def _parse_events_log(log_path):
-    events = []
-    if os.path.exists(log_path):
-        try:
-            with open(log_path, "r") as f:
-                for line in f.readlines()[-100:]:
-                    if line.strip():
-                        events.append(line.strip())
-        except Exception:
-            pass
-    return events
-
-
 def _extract_pet_name(msg):
     match = re.search(r"'([^']+)'", msg)
     return match.group(1) if match else "Unknown"
-
-
-def _count_today_feedings(feeding_log_path):
-    today = str(date.today())
-    feeding_log = _load_feeding_log(feeding_log_path)
-    count = 0
-    for pet_feedings in feeding_log.values():
-        for feeding in pet_feedings:
-            if feeding.get("date") == today:
-                count += 1
-    return count
 
 
 # ============================================================================
@@ -106,23 +73,25 @@ def _count_today_feedings(feeding_log_path):
 @auth.login_required
 def dashboard():
     user = auth.current_user()
-    paths = auth.user_paths(user["id"])
 
-    pets_db = pets.load_database(paths["database"])
-    device = devices.get_device(paths["device"])
-    events = _parse_events_log(paths["events_log"])
+    pets_db = pets.load_database(user["id"])
+    device = devices.get_device(user["id"])
+    # newest-first from the DB
+    recent_ai_events = events.recent_for_user(user["id"], kind="ai", limit=100)
 
     recent_events = []
-    for event in events:
-        m = re.search(r"\[(.*?)\] (.*)", event)
-        if m:
-            timestamp, msg = m.groups()
-            recent_events.append({
-                "timestamp": timestamp,
-                "pet": _extract_pet_name(msg),
-                "action": "allow_feeding" if "Recognized" in msg else "deny",
-                "time": timestamp.split("T")[1][:5] if "T" in timestamp else "—",
-            })
+    for event in recent_ai_events:
+        recent_events.append({
+            "timestamp": event["timestamp"],
+            "pet": _extract_pet_name(event["message"]),
+            "action": "allow_feeding" if "Recognized" in event["message"] else "deny",
+            "time": event["timestamp"].split("T")[1][:5] if "T" in event["timestamp"] else "—",
+        })
+
+    # The template does `recent_events | reverse` to put the newest on top,
+    # so what we hand it here needs to be oldest-first (like the last 8
+    # lines of an append-only log used to be) — flip our newest-first list.
+    latest_8_oldest_first = list(reversed(recent_events[:8]))
 
     return render_template(
         "user/dashboard.html",
@@ -130,9 +99,9 @@ def dashboard():
         pets=pets_db,
         pet_count=len(pets_db),
         device=device,
-        feedings_today=_count_today_feedings(paths["feeding_log"]),
+        feedings_today=events.count_recognized_today_for_user(user["id"]),
         detections_today=len(recent_events),
-        recent_events=recent_events[-8:],
+        recent_events=latest_8_oldest_first,
     )
 
 
@@ -167,11 +136,11 @@ def pets_page():
         image_file.save(save_path)
         rel_path = os.path.relpath(save_path, APP_ROOT)
 
-        pets.add_pet(paths["database"], name, rel_path, pet_type, age, weight, feeding_amount)
+        pets.add_pet(user["id"], name, rel_path, pet_type, age, weight, feeding_amount)
         flash(f"✓ Registered '{name}' successfully!")
         return redirect(url_for("user.pets_page"))
 
-    pets_db = pets.load_database(paths["database"])
+    pets_db = pets.load_database(user["id"])
     return render_template("user/pets.html", pets=pets_db)
 
 
@@ -180,7 +149,7 @@ def pets_page():
 def edit_pet(name):
     user = auth.current_user()
     paths = auth.user_paths(user["id"])
-    pets_db = pets.load_database(paths["database"])
+    pets_db = pets.load_database(user["id"])
 
     if name not in pets_db:
         flash(f"Pet '{name}' not found.", "error")
@@ -200,7 +169,7 @@ def edit_pet(name):
             image_file.save(save_path)
             rel_path = os.path.relpath(save_path, APP_ROOT)
 
-        pets.update_pet(paths["database"], name, pet_type, age, weight, feeding_amount, rel_path)
+        pets.update_pet(user["id"], name, pet_type, age, weight, feeding_amount, rel_path)
         flash(f"✓ Updated '{name}'.")
         return redirect(url_for("user.pets_page"))
 
@@ -211,8 +180,7 @@ def edit_pet(name):
 @auth.login_required
 def delete_pet(name):
     user = auth.current_user()
-    paths = auth.user_paths(user["id"])
-    if pets.delete_pet(paths["database"], name):
+    if pets.delete_pet(user["id"], name):
         flash(f"'{name}' was removed.")
     else:
         flash(f"Pet '{name}' not found.", "error")
@@ -227,27 +195,22 @@ def delete_pet(name):
 @auth.login_required
 def feed_page():
     user = auth.current_user()
-    paths = auth.user_paths(user["id"])
 
     if request.method == "POST":
         action = request.form.get("action")
         if action == "manual_feed":
-            devices.queue_feed_command(paths["device"], paths["device_events_log"])
+            devices.queue_feed_command(user["id"])
             flash("✓ Feed command sent to your feeder — it will dispense shortly.")
         elif action == "update_schedule":
             # Schedule storage is intentionally simple for the MVP: stored
             # as plain text on the device record. Swap for a real
             # schedule model when recurring multi-pet schedules are needed.
-            import json
-            device = devices.get_device(paths["device"])
-            device["feeding_schedule"] = request.form.get("schedule", "").strip()
-            with open(paths["device"], "w") as f:
-                json.dump(device, f, indent=2)
+            devices.set_feeding_schedule(user["id"], request.form.get("schedule", "").strip())
             flash("✓ Feeding schedule updated.")
         return redirect(url_for("user.feed_page"))
 
-    device = devices.get_device(paths["device"])
-    pets_db = pets.load_database(paths["database"])
+    device = devices.get_device(user["id"])
+    pets_db = pets.load_database(user["id"])
     return render_template("user/feed.html", device=device, pets=pets_db)
 
 
@@ -259,8 +222,7 @@ def feed_page():
 @auth.login_required
 def ai_page():
     user = auth.current_user()
-    paths = auth.user_paths(user["id"])
-    device = devices.get_device(paths["device"])
+    device = devices.get_device(user["id"])
     result = None
 
     if request.method == "POST":
@@ -271,14 +233,10 @@ def ai_page():
 
         try:
             image = normalize_input(image_file)
-            result = pipeline(
-                image,
-                database_path=paths["database"],
-                log_path=paths["events_log"],
-            )
+            result = pipeline(image, user_id=user["id"])
             if result.get("pet") and result.get("pet") != "Unknown":
                 pets.mark_detected(
-                    paths["database"],
+                    user["id"],
                     result["pet"],
                     fed=(result.get("action") == "allow_feeding"),
                 )
@@ -302,31 +260,28 @@ def ai_latest():
     every few seconds.
     """
     user = auth.current_user()
-    paths = auth.user_paths(user["id"])
-    events = _parse_events_log(paths["events_log"])
+    recent_ai_events = events.recent_for_user(user["id"], kind="ai", limit=100)
 
     parsed = []
-    for event in events:
-        m = re.search(r"\[(.*?)\] (.*)", event)
-        if m:
-            timestamp, msg = m.groups()
-            if "no_animal_detected" in msg:
-                continue
-            if "Recognized" in msg:
-                kind = "feeding"
-                pet_name = _extract_pet_name(msg)
-            else:
-                kind = "unknown"
-                pet_name = None
-            parsed.append({
-                "timestamp": timestamp,
-                "message": msg,
-                "kind": kind,
-                "pet": pet_name,
-                "time": timestamp.split("T")[1][:8] if "T" in timestamp else "—",
-            })
+    for event in recent_ai_events:
+        msg = event["message"]
+        if "no_animal_detected" in msg:
+            continue
+        if "Recognized" in msg:
+            kind = "feeding"
+            pet_name = _extract_pet_name(msg)
+        else:
+            kind = "unknown"
+            pet_name = None
+        timestamp = event["timestamp"]
+        parsed.append({
+            "timestamp": timestamp,
+            "message": msg,
+            "kind": kind,
+            "pet": pet_name,
+            "time": timestamp.split("T")[1][:8] if "T" in timestamp else "—",
+        })
 
-    parsed.sort(key=lambda e: e["timestamp"], reverse=True)
     return {"events": parsed[:10]}
 
 
@@ -338,32 +293,26 @@ def ai_latest():
 @auth.login_required
 def history_page():
     user = auth.current_user()
-    paths = auth.user_paths(user["id"])
 
-    events = _parse_events_log(paths["events_log"])
-    device_events = _parse_events_log(paths["device_events_log"])
+    ai_events = events.recent_for_user(user["id"], kind="ai", limit=100)
+    device_events = events.recent_for_user(user["id"], kind="device", limit=100)
 
     parsed_events = []
-    for event in events:
-        m = re.search(r"\[(.*?)\] (.*)", event)
-        if m:
-            timestamp, msg = m.groups()
-            # History is for things worth reviewing later: a pet being fed,
-            # or an animal showing up that wasn't recognized. Empty-frame
-            # "no animal detected" events fire constantly (every detection
-            # cycle with nothing in view) and would drown out everything
-            # else, so they're deliberately excluded here.
-            if "no_animal_detected" in msg:
-                continue
-            kind = "feeding" if "Recognized" in msg else "detection"
-            parsed_events.append({"timestamp": timestamp, "message": msg, "kind": kind})
+    for event in ai_events:
+        # History is for things worth reviewing later: a pet being fed,
+        # or an animal showing up that wasn't recognized. Empty-frame
+        # "no animal detected" events fire constantly (every detection
+        # cycle with nothing in view) and would drown out everything
+        # else, so they're deliberately excluded here.
+        if "no_animal_detected" in event["message"]:
+            continue
+        kind = "feeding" if "Recognized" in event["message"] else "detection"
+        parsed_events.append({"timestamp": event["timestamp"], "message": event["message"], "kind": kind})
 
-    parsed_device_events = []
-    for event in device_events:
-        m = re.search(r"\[(.*?)\] (.*)", event)
-        if m:
-            timestamp, msg = m.groups()
-            parsed_device_events.append({"timestamp": timestamp, "message": msg, "kind": "device"})
+    parsed_device_events = [
+        {"timestamp": event["timestamp"], "message": event["message"], "kind": "device"}
+        for event in device_events
+    ]
 
     combined = sorted(parsed_events + parsed_device_events, key=lambda e: e["timestamp"], reverse=True)
     return render_template("user/history.html", events=combined[:100])
@@ -377,10 +326,9 @@ def history_page():
 @auth.login_required
 def device_page():
     user = auth.current_user()
-    paths = auth.user_paths(user["id"])
-    device = devices.get_device(paths["device"])
-    device_events = _parse_events_log(paths["device_events_log"])
-    return render_template("user/device.html", device=device, device_events=device_events[-20:])
+    device = devices.get_device(user["id"])
+    device_events = events.recent_for_user(user["id"], kind="device", limit=20)
+    return render_template("user/device.html", device=device, device_events=device_events)
 
 
 @bp.route("/device/connect", methods=["POST"])
@@ -389,7 +337,6 @@ def connect_device():
     """Claim a physical feeder using the Device ID + Setup Key printed on
     the sticker on the unit. No admin involvement needed."""
     user = auth.current_user()
-    paths = auth.user_paths(user["id"])
 
     device_id = request.form.get("device_id", "").strip()
     setup_key = request.form.get("setup_key", "").strip()
@@ -397,7 +344,7 @@ def connect_device():
         flash("Both the Device ID and the Setup Key from the sticker are required.", "error")
         return redirect(url_for("user.device_page"))
 
-    device, error = devices.claim_device(user["id"], paths["device"], device_id, setup_key)
+    device, error = devices.claim_device(user["id"], device_id, setup_key)
     if error:
         flash(error, "error")
     else:
@@ -409,7 +356,6 @@ def connect_device():
 @auth.login_required
 def disconnect_device():
     user = auth.current_user()
-    paths = auth.user_paths(user["id"])
-    devices.unclaim_device(user["id"], paths["device"])
+    devices.unclaim_device(user["id"])
     flash("Feeder disconnected. You can reconnect it any time with the sticker on the device.")
     return redirect(url_for("user.device_page"))

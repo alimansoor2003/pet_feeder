@@ -22,20 +22,20 @@ from identifier import Identifier
 _detector = YoloDetector()
 
 # Identifier holds a small embedding cache keyed by (name, mtime), which is
-# safe to share across users since database paths differ per user — but to
-# keep things simple and correct we build one per call using the user's own
-# database path. This costs a fresh ResNet forward pass per pet on each
-# request; fine for MVP scale.
+# safe to share across users since each Identifier only ever looks at one
+# user's pets — but to keep things simple and correct we build one per call
+# using the user's own id. This costs a fresh ResNet forward pass per pet on
+# each request; fine for MVP scale.
 _identifier_cache: dict = {}
 
 
-def _get_identifier(database_path: str) -> Identifier:
-    if database_path not in _identifier_cache:
-        _identifier_cache[database_path] = Identifier(database_path=database_path)
-    return _identifier_cache[database_path]
+def _get_identifier(user_id: str) -> Identifier:
+    if user_id not in _identifier_cache:
+        _identifier_cache[user_id] = Identifier(user_id=user_id)
+    return _identifier_cache[user_id]
 
 
-def pipeline(image: Image.Image, database_path: str = "database.json", log_path: str = "events.log") -> dict:
+def pipeline(image: Image.Image, user_id: str) -> dict:
     """
     Run the full detect -> identify -> decide pipeline on a single image.
 
@@ -44,22 +44,22 @@ def pipeline(image: Image.Image, database_path: str = "database.json", log_path:
     here it is always a PIL.Image (see input_adapter.py). No branching
     on input type happens anywhere in this function.
 
-    `database_path` and `log_path` let each signed-up user's pipeline run
-    against their own pets and their own event log, without detector.py,
-    identifier.py, or decision.py needing to know about users at all.
+    `user_id` lets each signed-up user's pipeline run against their own
+    pets and their own event history, without detector.py, identifier.py,
+    or decision.py needing to know anything beyond that id.
     """
     label, crop, det_conf = _detector.detect(image)
 
     if label == "none":
-        result = decision.ignore(reason="no_animal_detected", log_path=log_path)
+        result = decision.ignore(reason="no_animal_detected", user_id=user_id)
         return {"animal": "none", **result}
 
-    identifier = _get_identifier(database_path)
+    identifier = _get_identifier(user_id)
     pet_name, match_score = identifier.match(crop)
 
     if pet_name is None:
-        result = decision.ignore(reason="unknown_animal", confidence=match_score, log_path=log_path)
+        result = decision.ignore(reason="unknown_animal", confidence=match_score, user_id=user_id)
         return {"animal": label, "pet": "Unknown", "score": round(match_score, 2), **result}
 
-    result = decision.decide(pet_name, match_score, log_path=log_path)
+    result = decision.decide(pet_name, match_score, user_id=user_id)
     return {"animal": label, "pet": pet_name, "score": round(match_score, 2), **result}

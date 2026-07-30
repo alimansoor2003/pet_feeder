@@ -2,21 +2,22 @@
 identifier.py
 -------------
 Single responsibility: turn an image of an animal into an embedding
-vector, and compare it against the embeddings of pets stored in
-database.json to find the best match.
+vector, and compare it against the embeddings of a user's pets (stored
+in Postgres — see pets.py) to find the best match.
 
 Knows nothing about YOLO, the web layer, or feeding logic. It only
 answers: "whose pet is this, and how confident am I?"
 """
 
-import json
 import os
 from typing import Dict, Optional, Tuple
 
 import numpy as np
 import torch
 from PIL import Image
-from torchvision import models, transforms
+from torchvision import transforms
+
+import pets as pets_module
 
 # MVP device rule: everything stays on CPU. Never mix CPU/CUDA tensors.
 DEVICE = "cpu"
@@ -56,8 +57,8 @@ _TRANSFORM = transforms.Compose(
 
 
 class Identifier:
-    def __init__(self, database_path: str = "database.json"):
-        self.database_path = database_path
+    def __init__(self, user_id: str):
+        self.user_id = user_id
         self.model = _build_embedding_model()
         self._embedding_cache: Dict[str, np.ndarray] = {}
 
@@ -75,13 +76,10 @@ class Identifier:
     def _cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
         return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-8))
 
-    # -- database access (read-only from here; database.json owns storage) --
+    # -- database access (read-only from here; pets.py owns storage) --
 
     def _load_database(self) -> dict:
-        if not os.path.exists(self.database_path):
-            return {}
-        with open(self.database_path, "r") as f:
-            return json.load(f)
+        return pets_module.load_database(self.user_id)
 
     def _get_pet_embedding(self, name: str, image_path: str) -> Optional[np.ndarray]:
         if not os.path.exists(image_path):

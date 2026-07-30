@@ -7,33 +7,18 @@ these URLs gets a 403, not a redirect, so it's unambiguous that this is
 an access-control boundary and not a navigation nudge.
 """
 
-import os
-import re
-
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, url_for
 
 import auth
 import devices
+import events
 import pets
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 
 def _count_user_pets(user_id):
-    paths = auth.user_paths(user_id)
-    return len(pets.load_database(paths["database"]))
-
-
-def _count_user_feedings(user_id):
-    paths = auth.user_paths(user_id)
-    if not os.path.exists(paths["events_log"]):
-        return 0
-    count = 0
-    with open(paths["events_log"], "r") as f:
-        for line in f:
-            if "Recognized" in line:
-                count += 1
-    return count
+    return len(pets.load_database(user_id))
 
 
 # ============================================================================
@@ -47,7 +32,7 @@ def dashboard():
     total_pets = sum(_count_user_pets(u["id"]) for u in users)
     all_devices = devices.list_all_devices()
     connected_devices = sum(1 for d in all_devices if d["status"] == "online")
-    total_feedings = sum(_count_user_feedings(u["id"]) for u in users)
+    total_feedings = sum(events.count_recognized_for_user(u["id"]) for u in users)
 
     return render_template(
         "admin/dashboard.html",
@@ -70,8 +55,7 @@ def users_page():
     users = auth.list_all_users()
     rows = []
     for u in users:
-        paths = auth.user_paths(u["id"])
-        device = devices.get_device(paths["device"])
+        device = devices.get_device(u["id"])
         rows.append({
             "name": u["name"],
             "email": u["email"],
@@ -154,21 +138,7 @@ def provision_device():
 @bp.route("/analytics")
 @auth.role_required("admin")
 def analytics_page():
-    users = auth.list_all_users()
-    total_recognized = 0
-    total_ignored = 0
-
-    for u in users:
-        paths = auth.user_paths(u["id"])
-        if not os.path.exists(paths["events_log"]):
-            continue
-        with open(paths["events_log"], "r") as f:
-            for line in f:
-                if "Recognized" in line:
-                    total_recognized += 1
-                elif "Ignored" in line:
-                    total_ignored += 1
-
+    total_recognized, total_ignored = events.recognition_totals()
     total = total_recognized + total_ignored
     recognition_rate = round((total_recognized / total) * 100, 1) if total else 0
 
@@ -187,25 +157,4 @@ def analytics_page():
 @bp.route("/logs")
 @auth.role_required("admin")
 def logs_page():
-    users = auth.list_all_users()
-    all_lines = []
-
-    for u in users:
-        paths = auth.user_paths(u["id"])
-        for log_path, kind in [(paths["events_log"], "ai"), (paths["device_events_log"], "device")]:
-            if not os.path.exists(log_path):
-                continue
-            with open(log_path, "r") as f:
-                for line in f.readlines()[-50:]:
-                    m = re.search(r"\[(.*?)\] (.*)", line.strip())
-                    if m:
-                        timestamp, msg = m.groups()
-                        all_lines.append({
-                            "timestamp": timestamp,
-                            "user": u["email"],
-                            "message": msg,
-                            "kind": kind,
-                        })
-
-    all_lines.sort(key=lambda x: x["timestamp"], reverse=True)
-    return render_template("admin/logs.html", logs=all_lines[:150])
+    return render_template("admin/logs.html", logs=events.recent_across_all_users(limit=150))

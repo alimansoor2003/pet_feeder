@@ -15,6 +15,11 @@ key by hand. Setting SECRET_KEY in the environment overrides the file.
 import os
 import secrets
 
+from dotenv import load_dotenv
+
+load_dotenv()  # local dev only: reads .env into os.environ if present, before
+                # the SECRET_KEY/DATABASE_URL checks below run.
+
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 KEY_FILE = os.path.join(APP_ROOT, "data", ".secret_key")
 
