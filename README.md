@@ -4,7 +4,8 @@ PawSense is a full-stack smart pet feeder: an ESP32-powered device that
 dispenses food only for registered pets, paired with a Flask web app for
 registration, live monitoring, and feeding history.
 
-<img width="500" height="300" alt="giphy" src="https://github.com/user-attachments/assets/7b5e55c8-862b-463a-b5ce-bc485fa604a2" />
+<img width="1125" height="492" alt="image" src="https://github.com/user-attachments/assets/c134f911-5163-4fb8-8329-7c7d15f9b60c" />
+
 
 Started as a summer training project; now deployed and running on the
 public internet rather than just a laptop on the home WiFi.
