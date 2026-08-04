@@ -1,9 +1,21 @@
 # Railway deployment config for PawSense — the Railway counterpart to
 # render.yaml. Railway picks this up automatically from the repo root.
 #
-# DATABASE_URL and SECRET_KEY are NOT declared here: Railway has no
-# equivalent of render.yaml's `sync: false` / `generateValue`, so both
-# are set in the service's Variables tab instead (see README).
+# Variables are NOT declarable here — Railway has no equivalent of
+# render.yaml's `sync: false` / `generateValue` — so these three go in
+# the service's Variables tab by hand:
+#
+#   DATABASE_URL   Neon (or Railway Postgres) connection string
+#   SECRET_KEY     any long random string; signs login sessions
+#   RAILPACK_DEPLOY_APT_PACKAGES
+#                  libgl1 libglib2.0-0 libsm6 libxext6 libxrender1 libxcb1
+#
+# That last one is mandatory, not a nicety. opencv-python (pulled in by
+# ultralytics, see requirements.txt) links against X11 libraries that
+# Railway's runtime image doesn't include, so without it the container
+# crashes at startup on `import cv2` and restart-loops forever. Render's
+# image happens to ship them already, which is why render.yaml needs no
+# equivalent.
 
 # No [build] section on purpose: Railway's default builder (Railpack)
 # already detects Python and installs requirements.txt correctly here.

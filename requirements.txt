@@ -4,12 +4,14 @@ torch
 torchvision
 pillow
 numpy
-# Headless build: same API minus the GUI window functions (imshow, waitKey),
-# none of which are used here — webcam_watcher.py only calls VideoCapture,
-# imencode and cvtColor. The regular opencv-python wheel links against X11
-# desktop libraries (libxcb.so.1) that server containers don't ship, so
-# ultralytics' `import cv2` crashed the app at startup on Railway.
-opencv-python-headless
+# NOT swappable for opencv-python-headless, however tempting: ultralytics
+# declares a hard `opencv-python>=4.6.0` dependency, so pip installs the
+# GUI build alongside the headless one and whichever lands last owns the
+# shared cv2/ directory. This wheel links against X11 libraries that slim
+# server images don't ship, so a bare container dies at `import cv2` with
+# "libxcb.so.1: cannot open shared object file". Fix it at the image level
+# instead — see railway.toml for the apt packages Railway needs.
+opencv-python
 timm
 waitress
 psycopg[binary,pool]
