@@ -5,8 +5,10 @@
 # equivalent of render.yaml's `sync: false` / `generateValue`, so both
 # are set in the service's Variables tab instead (see README).
 
-[build]
-builder = "NIXPACKS"   # auto-detects Python and installs requirements.txt
+# No [build] section on purpose: Railway's default builder (Railpack)
+# already detects Python and installs requirements.txt correctly here.
+# Pinning builder = "NIXPACKS" would swap out a build that demonstrably
+# works for a different one, with a different default Python version.
 
 [deploy]
 # serve.py (waitress) reads PORT from the environment, which Railway
