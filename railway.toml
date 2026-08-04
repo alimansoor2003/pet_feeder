@@ -1,0 +1,28 @@
+# Railway deployment config for PawSense — the Railway counterpart to
+# render.yaml. Railway picks this up automatically from the repo root.
+#
+# DATABASE_URL and SECRET_KEY are NOT declared here: Railway has no
+# equivalent of render.yaml's `sync: false` / `generateValue`, so both
+# are set in the service's Variables tab instead (see README).
+
+[build]
+builder = "NIXPACKS"   # auto-detects Python and installs requirements.txt
+
+[deploy]
+# serve.py (waitress) reads PORT from the environment, which Railway
+# injects — no port is hardcoded here.
+startCommand = "python serve.py"
+
+# The landing page is public and touches no models, so a 200 here means
+# the app booted and Postgres is connected (db.init_db() runs at import
+# time, so a bad DATABASE_URL fails the deploy outright rather than
+# going live broken).
+healthcheckPath = "/"
+
+# Generous: the first boot imports ultralytics + timm and downloads the
+# ViT weights, which is slow on a cold container. Too short a timeout
+# fails a deploy that would have come up fine.
+healthcheckTimeout = 300
+
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
