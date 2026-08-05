@@ -10,8 +10,10 @@ registration, live monitoring, and feeding history.
 Started as a summer training project; now deployed and running on the
 public internet rather than just a laptop on the home WiFi.
 
+**Live in free tire for 30 days:** https://pawsense-production-bb6a.up.railway.app
+
 **Please note:** It may take some time to start because it is a free tier.
-**Live:** https://pawsense-ho4m.onrender.com
+**Live in free tire:** https://pawsense-ho4m.onrender.com
 
 ---
 
