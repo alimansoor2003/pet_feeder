@@ -7,13 +7,20 @@ registration, live monitoring, and feeding history.
 <img width="1125" height="492" alt="image" src="https://github.com/user-attachments/assets/c134f911-5163-4fb8-8329-7c7d15f9b60c" />
 
 
-Started as a summer training project; now deployed and running on the
-public internet rather than just a laptop on the home WiFi.
+## 🚀 Live Deployment
 
-**Live in free tire for 30 days:** https://pawsense-production-bb6a.up.railway.app
+What started as a summer training project running locally is now fully deployed on the public internet! 
 
-**Please note:** It may take some time to start because it is a free tier.
-**Live in free tire:** https://pawsense-ho4m.onrender.com
+**Primary Hosting (Active):**
+The project is officially hosted by NEU University. You can access the live application here:
+🔗 **[NEU University Server Deployment](https://52-200-48-50.sslip.io/)**
+
+---
+
+**Legacy / Free-Tier Deployments:**
+During the initial deployment phase, the app was hosted on free-tier platforms. *(Please note: These links may take a minute or two to load, as free-tier servers go to sleep when inactive).*
+* **Railway (30-day trial):** [https://pawsense-production-bb6a.up.railway.app](https://pawsense-production-bb6a.up.railway.app)
+* **Render:** [https://pawsense-ho4m.onrender.com](https://pawsense-ho4m.onrender.com)
 
 ---
 
